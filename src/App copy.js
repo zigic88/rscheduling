@@ -9,7 +9,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchFilters, setSearchFilters] = useState({ name: '', symbol: '', address: '', decimals: '' });
 
-  const ITEMS_PER_PAGE = 30;
+  const ITEMS_PER_PAGE = 10;
   const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90/api/tokens';
 
   useEffect(() => {
@@ -38,7 +38,7 @@ function App() {
     return (
       token.name.toLowerCase().includes(searchFilters.name.toLowerCase()) &&
       token.symbol.toLowerCase().includes(searchFilters.symbol.toLowerCase()) &&
-      token.address.toLowerCase().includes(searchFilters.address.toLowerCase()) &&
+      token.address.toLowerCase().includes(searchFilters.address.toLowerCase())&&
       (searchFilters.decimals === '' || token.decimals.toString() === searchFilters.decimals)
     );
   });
@@ -59,14 +59,6 @@ function App() {
       }
       return prevPage;
     });
-  };
-
-  const handleGoToFirstPage = () => {
-    setCurrentPage(1);
-  };
-
-  const handleGoToLastPage = () => {
-    setCurrentPage(totalPages);
   };
 
   return (
@@ -131,11 +123,9 @@ function App() {
             </tbody>
           </table>
           <div className="pagination">
-            <button onClick={handleGoToFirstPage} disabled={currentPage === 1}>First Page</button>
             <button onClick={() => handlePageChange('prev')} disabled={currentPage === 1}>Previous</button>
             <span>Page {currentPage} of {totalPages}</span>
             <button onClick={() => handlePageChange('next')} disabled={currentPage === totalPages}>Next</button>
-            <button onClick={handleGoToLastPage} disabled={currentPage === totalPages}>Last Page</button>
           </div>
         </>
       )}
