@@ -7,19 +7,10 @@ function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchFilters, setSearchFilters] = useState({
-    name: '',
-    symbol: '',
-    address: '',
-    decimals: '',
-    notIncludePump: true,
-    notIncludeMoon: true,
-    createdOnPump: false
-  });
+  const [searchFilters, setSearchFilters] = useState({ name: '', symbol: '', address: '', decimals: '' });
 
   const ITEMS_PER_PAGE = 20;
   const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90/api/tokens';
-  const UPDATE_METADATA_ENDPOINT = process.env.REACT_APP_UPDATE_METADATA_ENDPOINT || 'https://139.180.184.90/api/update-metadata';
 
   useEffect(() => {
     fetchTokens();
@@ -37,51 +28,19 @@ function App() {
     }
   };
 
-  const handleUpdateMetadata = async () => {
-    const confirmUpdate = window.confirm("Are you sure you want to update metadata for the filtered records?");
-    if (!confirmUpdate) return;
-
-    const filteredAddresses = filteredTokens.map((token) => token.address);
-    console.log('checked ' + filteredAddresses);
-
-    try {
-      setLoading(true);
-      const response = await axios.post(UPDATE_METADATA_ENDPOINT, { addresses: filteredAddresses });
-      alert(response.data.message);
-      fetchTokens(); // Refresh data after update
-    } catch (err) {
-      alert("Error updating metadata: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleFilterChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setSearchFilters((prevFilters) => ({
-      ...prevFilters,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    const { name, value } = e.target;
+    setSearchFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
     setCurrentPage(1); // Reset to the first page when filters change
   };
 
   const filteredTokens = tokens.filter((token) => {
-    const matchesFilters =
+    return (
       token.name.toLowerCase().includes(searchFilters.name.toLowerCase()) &&
       token.symbol.toLowerCase().includes(searchFilters.symbol.toLowerCase()) &&
       token.address.toLowerCase().includes(searchFilters.address.toLowerCase()) &&
-      (searchFilters.decimals === '' || token.decimals.toString() === searchFilters.decimals);
-
-    const matchesNotIncludePump =
-      searchFilters.notIncludePump ? !token.address.toLowerCase().endsWith('pump') : true;
-
-    const matchesNotIncludeMoon =
-      searchFilters.notIncludeMoon ? !token.address.toLowerCase().endsWith('moon') : true;
-
-    const matchesCreatedOnPump =
-      searchFilters.createdOnPump ? token.created_on === 'https://pump.fun' : true;
-
-    return matchesFilters && matchesNotIncludePump && matchesNotIncludeMoon && matchesCreatedOnPump;
+      (searchFilters.decimals === '' || token.decimals.toString() === searchFilters.decimals)
+    );
   });
 
   const paginatedTokens = filteredTokens.slice(
@@ -112,16 +71,8 @@ function App() {
 
   return (
     <div className="App">
-      <h1 style={{ marginTop: '10px', marginBottom: '5px' }}>Token List</h1>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={fetchTokens} className="refresh-button">Refresh</button>
-          <button onClick={handleUpdateMetadata} className="update-metadata-button">Update Metadata</button>
-        </div>
-        <div style={{ fontSize: '14px' }}>
-          <span>Total Records: {filteredTokens.length}</span> | <span>Page {currentPage} of {totalPages}</span>
-        </div>
-      </div>
+      <h1>Token List</h1>
+      <button onClick={fetchTokens} className="refresh-button">Refresh</button>
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
@@ -156,37 +107,8 @@ function App() {
               value={searchFilters.decimals}
               onChange={handleFilterChange}
             />
-            <div>
-              <label style={{ fontSize: '12px' }}>
-                <input
-                  type="checkbox"
-                  name="notIncludePump"
-                  checked={searchFilters.notIncludePump}
-                  onChange={handleFilterChange}
-                />
-                Not Include Pump
-              </label>
-              <label style={{ fontSize: '12px' }}>
-                <input
-                  type="checkbox"
-                  name="notIncludeMoon"
-                  checked={searchFilters.notIncludeMoon}
-                  onChange={handleFilterChange}
-                />
-                Not Include Moon
-              </label>
-              <label style={{ fontSize: '12px' }}>
-                <input
-                  type="checkbox"
-                  name="createdOnPump"
-                  checked={searchFilters.createdOnPump}
-                  onChange={handleFilterChange}
-                />
-                Created On Pump
-              </label>
-            </div>
           </div>
-          <table className="token-table" style={{ width: '100%' }}>
+          <table className="token-table">
             <thead>
               <tr>
                 <th>Name</th>
@@ -194,13 +116,6 @@ function App() {
                 <th>Address</th>
                 <th>Decimals</th>
                 <th>Created Date</th>
-                <th>Holders</th>
-                <th>Marketcap</th>
-                <th>Supply</th>
-                <th>Price</th>
-                <th>Volume 24H</th>
-                <th>Created On</th>
-                <th>Freeze Authority</th>
               </tr>
             </thead>
             <tbody>
@@ -219,13 +134,6 @@ function App() {
                   </td>
                   <td>{token.decimals}</td>
                   <td>{new Date(token.created_date).toLocaleString()}</td>
-                  <td>{token.holders || '-'}</td>
-                  <td>{token.marketcap || '-'}</td>
-                  <td>{token.supply || '-'}</td>
-                  <td>{token.price || '-'}</td>
-                  <td>{token.volume_24h || '-'}</td>
-                  <td>{token.created_on || '-'}</td>
-                  <td>{token.freeze_authority || '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -233,6 +141,7 @@ function App() {
           <div className="pagination">
             <button onClick={handleGoToFirstPage} disabled={currentPage === 1}>First Page</button>
             <button onClick={() => handlePageChange('prev')} disabled={currentPage === 1}>Previous</button>
+            <span>Page {currentPage} of {totalPages}</span>
             <button onClick={() => handlePageChange('next')} disabled={currentPage === totalPages}>Next</button>
             <button onClick={handleGoToLastPage} disabled={currentPage === totalPages}>Last Page</button>
           </div>

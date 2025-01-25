@@ -24,6 +24,20 @@ h1 {
   background-color: #0056b3;
 }
 
+.update-metadata-button {
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  background-color: #04c762;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.update-metadata-button:hover {
+  background-color: #028d45;
+}
+
 .filters {
   display: flex;
   gap: 10px;

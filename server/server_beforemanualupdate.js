@@ -30,9 +30,6 @@ const pool = new Pool({
   schema: 'tokenres'
 });
 
-// Middleware to parse JSON
-app.use(express.json());
-
 // Create or alter tbtoken table
 async function createOrAlterTable() {
   try {
@@ -153,66 +150,10 @@ cron.schedule('*/30 * * * * *', async () => { // Runs every 30 seconds
   console.log('Data fetching completed.');
 });
 
-
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
-});
-
-// API endpoint to update metadata for filtered records
-app.post('/api/update-metadata', async (req, res) => {
-  const { addresses } = req.body;
-  if (!addresses || !Array.isArray(addresses)) {
-    return res.status(400).json({ message: 'Invalid addresses provided' });
-  }
-
-  try {
-    for (const address of addresses) {
-      // Fetch additional metadata for the token from the API
-      const tokenMetaResponse = await axios.get(`https://pro-api.solscan.io/v2.0/token/meta?address=${address}`, {
-        headers: {
-          'token': API_TOKEN,
-        },
-      });
-
-      const tokenMeta = tokenMetaResponse.data.data || {};
-
-      // Update the metadata fields for the token
-      const updateQuery = {
-        text: `
-          UPDATE tokenres.tbtoken
-          SET 
-            holders = $1,
-            marketcap = $2,
-            supply = $3,
-            price = $4,
-            volume_24h = $5,
-            created_on = $6,
-            freeze_authority = $7
-          WHERE address = $8
-        `,
-        values: [
-          tokenMeta.holder || null,
-          tokenMeta.market_cap || null,
-          tokenMeta.supply || null,
-          tokenMeta.price || null,
-          tokenMeta.volume_24h || null,
-          tokenMeta.metadata?.createdOn || null,
-          tokenMeta.freeze_authority || null,
-          address,
-        ],
-      };
-
-      await pool.query(updateQuery);
-      console.log(`Metadata updated for address: ${address}`);
-    }
-
-    res.json({ message: 'Metadata update completed successfully' });
-  } catch (error) {
-    console.error('Error updating metadata:', error);
-    res.status(500).json({ message: 'Metadata update failed', error });
-  }
 });
 
 // API endpoint to retrieve token list from PostgreSQL database
