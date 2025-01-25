@@ -32,68 +32,68 @@ async function createTable() {
     } catch (error) {
       console.error('Error creating tbtoken table:', error);
     }
-}
+  }
 
 // Initialize table creation
 createTable();
 
-// Function to fetch and save data from the API
-async function fetchAndSaveData(page) {
+// Cron job to pull token list from Solscan API every hour
+cron.schedule('*/30 * * * * *', async () => {
   try {
-    console.log('Fetch from page: ' + page);
-    const response = await axios.get(`https://pro-api.solscan.io/v2.0/token/list?sort_by=created_time&page=${page}&page_size=100`, {
+    const response = await axios.get('https://pro-api.solscan.io/v2.0/token/list?page=1&page_size=100', {
       headers: {
         'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3MzMwNjc2NzAyNTMsImVtYWlsIjoib2hkYW1uaXRzdG9ueUBvdXRsb29rLmNvbSIsImFjdGlvbiI6InRva2VuLWFwaSIsImFwaVZlcnNpb24iOiJ2MiIsImlhdCI6MTczMzA2NzY3MH0.teF5vKuH870DbErbrWWN6AMoeWgimukmV1ies3dm7p8',
       },
     });
-
-    const tokenList = response.data.data;
-
-    if (!tokenList || tokenList.length === 0) {
-      console.log(`No data returned for page ${page}`);
-      return false; // No data returned
-    }
+    const dataArray = response.data;
+    const tokenList = dataArray.data;
+    console.log('response dataArray: ' + dataArray);
+    console.log('response data only: ' + tokenList);
 
     const query =
-      `INSERT INTO tokenres.tbtoken (address, decimals, name, symbol, created_time, created_date)
-       VALUES ${tokenList
-         .map(
-           (_, index) =>
-              `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`
-         )
-         .join(', ')}`;
+    `INSERT INTO tokenres.tbtoken (address, decimals, name, symbol, created_time, created_date)
+     VALUES ${tokenList
+       .map(
+         (_, index) =>
+            `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`
+       )
+       .join(', ')}`;
 
+    // Construct the values
     const values = tokenList.flatMap(token => [
-      token.address,
-      token.decimals,
-      token.name,
-      token.symbol,
-      token.created_time,
-      new Date(token.created_time * 1000).toISOString(),
+        token.address,
+        token.decimals,
+        token.name,
+        token.symbol,
+        token.created_time,
+        new Date(token.created_time * 1000).toISOString(),
     ]);
 
-    await pool.query(query, values);
-    console.log(`Data from page ${page} saved successfully.`);
+    await pool.query(query, values)
+    .then(res => console.log(res))
+    .catch(e => console.error(e));
 
-    return true; // Data fetched and saved successfully
   } catch (error) {
-    console.error(`Error fetching or saving data from page ${page}:`, error);
-    return false;
+    console.error(error);
   }
-}
-
-// Cron job to fetch token data from Solscan API every 30 seconds
-cron.schedule('*/30 * * * * *', async () => { // Runs every 30 seconds
-  console.log('Starting to fetch data from Solscan API...');
-
-  for (let page = 1; page <= 2; page++) {
-    console.log(`Fetching data for page ${page}...`);
-    const success = await fetchAndSaveData(page);
-    if (!success) break; // Stop if no data is returned
-  }
-
-  console.log('Data fetching completed.');
 });
+
+// var cors = require('cors')
+// const corsOptions = {
+//     origin: 'https://4fa6-180-242-131-181.ngrok-free.app',//(https://your-client-app.com)
+//     optionsSuccessStatus: 200,
+//   };  
+// app.use(cors(corsOptions));
+// app.use(cors());
+// const { createProxyMiddleware } = require('http-proxy-middleware');
+// app.use('/api', createProxyMiddleware({ 
+//     target: 'http://localhost:8080/', //original url
+//     changeOrigin: true, 
+//     //secure: false,
+//     onProxyRes: function (proxyRes, req, res) {
+//        proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+//     }
+// }));
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -105,7 +105,7 @@ app.use(function(req, res, next) {
 app.get('/api/tokens', async (req, res) => {
   try {
     const query = {
-      text: "SELECT * FROM tokenres.tbtoken WHERE address NOT ILIKE $1 AND address NOT ILIKE $2 ORDER BY created_time DESC;",
+      text: "SELECT * FROM tokenres.tbtoken WHERE ADDRESS NOT ILIKE $1 AND ADDRESS NOT ILIKE $2 order by created_time DESC;",
     };
     const values = ['%moon', '%pump'];
     const result = await pool.query(query, values);

@@ -9,7 +9,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchFilters, setSearchFilters] = useState({ name: '', symbol: '', address: '', decimals: '' });
 
-  const ITEMS_PER_PAGE = 30;
+  const ITEMS_PER_PAGE = 20;
   const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90/api/tokens';
 
   useEffect(() => {
@@ -123,7 +123,15 @@ function App() {
                 <tr key={token.address}>
                   <td>{token.name}</td>
                   <td>{token.symbol}</td>
-                  <td>{token.address}</td>
+                  <td>
+                    <a
+                      href={`https://solscan.io/token/${token.address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {token.address}
+                    </a>
+                  </td>
                   <td>{token.decimals}</td>
                   <td>{new Date(token.created_date).toLocaleString()}</td>
                 </tr>

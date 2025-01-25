@@ -41,6 +41,7 @@ h1 {
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
+  font-size: 12px;
 }
 
 .token-table th, .token-table td {
