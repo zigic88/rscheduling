@@ -10,7 +10,7 @@ function App() {
   const [searchFilters, setSearchFilters] = useState({ name: '', symbol: '', address: '', decimals: '' });
 
   const ITEMS_PER_PAGE = 10;
-  const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90:3001/api/tokens';
+  const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90/api/tokens';
 
   useEffect(() => {
     fetchTokens();
