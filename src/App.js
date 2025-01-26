@@ -143,6 +143,29 @@ function App() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={fetchTokens} className="refresh-button">Refresh</button>
+          <button className="clear-filter-button"
+            onClick={() =>
+              setSearchFilters({
+                name: '',
+                symbol: '',
+                address: '',
+                decimals: '',
+                notIncludePump: true,
+                notIncludeMoon: true,
+                createdOnPump: false,
+                created_date: '',
+                holders: '',
+                marketcap: '',
+                supply: '',
+                price: '',
+                volume_24h: '',
+                created_on: '',
+                freeze_authority: '',
+              })
+            }
+          >
+            Clear Filters
+          </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button onClick={handleUpdateMetadata} className="update-metadata-button">Update Metadata</button>
             <label>
