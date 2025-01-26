@@ -1,13 +1,20 @@
 .App {
   font-family: Arial, sans-serif;
   padding: 20px;
-  max-width: 1200px; /* Increased width */
   margin: auto;
 }
 
 h1 {
   color: #333;
   text-align: center;
+}
+
+th input {
+  width: 95%; /* Adjust the width to fit the column */
+  margin-top: 5px; /* Add spacing between the header text and input */
+  margin-bottom: 10px;
+  padding: 4px; /* Add padding for better UX */
+  box-sizing: border-box; /* Ensure padding doesn't overflow the cell */
 }
 
 .refresh-button {
