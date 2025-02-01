@@ -50,13 +50,31 @@ async function createOrAlterTable() {
 
     await pool.query(`
       ALTER TABLE tokenres.tbtoken
-      ADD COLUMN IF NOT EXISTS holders NUMERIC,
-      ADD COLUMN IF NOT EXISTS marketcap NUMERIC,
-      ADD COLUMN IF NOT EXISTS supply NUMERIC,
-      ADD COLUMN IF NOT EXISTS price NUMERIC,
-      ADD COLUMN IF NOT EXISTS volume_24h NUMERIC,
+      ADD COLUMN IF NOT EXISTS holders VARCHAR,
+      ADD COLUMN IF NOT EXISTS marketcap VARCHAR,
+      ADD COLUMN IF NOT EXISTS supply VARCHAR,
+      ADD COLUMN IF NOT EXISTS price VARCHAR,
+      ADD COLUMN IF NOT EXISTS volume_24h VARCHAR,
       ADD COLUMN IF NOT EXISTS created_on VARCHAR,
       ADD COLUMN IF NOT EXISTS freeze_authority VARCHAR;
+    `);
+
+    await pool.query(`
+      ALTER TABLE tokenres.tbtoken
+      ALTER COLUMN holders TYPE VARCHAR,
+      ALTER COLUMN marketcap TYPE VARCHAR,
+      ALTER COLUMN supply TYPE VARCHAR,
+      ALTER COLUMN price TYPE VARCHAR,
+      ALTER COLUMN volume_24h TYPE VARCHAR,
+      ALTER COLUMN created_on TYPE VARCHAR,
+      ALTER COLUMN freeze_authority TYPE VARCHAR;
+    `);
+
+    await pool.query(`
+      ALTER TABLE tokenres.tbtoken
+      ADD COLUMN IF NOT EXISTS metadata_name VARCHAR,
+      ADD COLUMN IF NOT EXISTS metadata_symbol VARCHAR,
+      ADD COLUMN IF NOT EXISTS metadata_image VARCHAR;
     `);
 
     console.log('tbtoken table created or altered successfully');
@@ -108,10 +126,15 @@ async function fetchAndSaveData(page) {
 
       const tokenMeta = tokenMetaResponse.data.data || {};
 
+      // Extract metadata attributes safely
+      const metadataImage = tokenMeta.metadata?.image || null;
+      const metadataName = tokenMeta.metadata?.name || null;
+      const metadataSymbol = tokenMeta.metadata?.symbol || null;
+
       // Insert new record, including only fields that are available
       const insertQuery = {
-        text: `INSERT INTO tokenres.tbtoken (address, decimals, name, symbol, created_time, created_date, holders, marketcap, supply, price, volume_24h, created_on, freeze_authority) 
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+        text: `INSERT INTO tokenres.tbtoken (address, decimals, name, symbol, created_time, created_date, holders, marketcap, supply, price, volume_24h, created_on, freeze_authority, metadata_name, metadata_symbol, metadata_image) 
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
         values: [
           token.address,
           token.decimals,
@@ -119,13 +142,14 @@ async function fetchAndSaveData(page) {
           token.symbol,
           token.created_time,
           new Date(token.created_time * 1000).toISOString(),
-          tokenMeta.holder || null,
-          tokenMeta.market_cap || null,
-          tokenMeta.supply || null,
-          tokenMeta.price || null,
-          tokenMeta.volume_24h || null,
-          tokenMeta.metadata?.createdOn || null,
-          tokenMeta.freeze_authority || null
+          tokenMeta.holder || '-',
+          tokenMeta.market_cap || '-',
+          tokenMeta.supply || '-',
+          tokenMeta.price || '-',
+          tokenMeta.volume_24h || '-',
+          tokenMeta.metadata?.createdOn || '-',
+          tokenMeta.freeze_authority || '-',
+          metadataName, metadataSymbol, metadataImage
         ].map(value => (value !== undefined ? value : null)),
       };
 
@@ -141,7 +165,7 @@ async function fetchAndSaveData(page) {
 }
 
 // Cron job to fetch token data from Solscan API every 30 seconds
-cron.schedule('*/30 * * * * *', async () => { // Runs every 30 seconds
+cron.schedule('*/3000 * * * * *', async () => { // Runs every 30 seconds
   console.log('Starting to fetch data from Solscan API...');
 
   for (let page = 1; page <= 2; page++) {
@@ -154,7 +178,7 @@ cron.schedule('*/30 * * * * *', async () => { // Runs every 30 seconds
 });
 
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
@@ -177,6 +201,10 @@ app.post('/api/update-metadata', async (req, res) => {
       });
 
       const tokenMeta = tokenMetaResponse.data.data || {};
+      // Extract metadata attributes safely
+      const metadataImage = tokenMeta.metadata?.image || null;
+      const metadataName = tokenMeta.metadata?.name || null;
+      const metadataSymbol = tokenMeta.metadata?.symbol || null;
 
       // Update the metadata fields for the token
       const updateQuery = {
@@ -189,17 +217,23 @@ app.post('/api/update-metadata', async (req, res) => {
             price = $4,
             volume_24h = $5,
             created_on = $6,
-            freeze_authority = $7
-          WHERE address = $8
+            freeze_authority = $7,
+            metadata_name = $8, 
+            metadata_symbol = $9, 
+            metadata_image = $10
+          WHERE address = $11
         `,
         values: [
-          tokenMeta.holder || null,
-          tokenMeta.market_cap || null,
-          tokenMeta.supply || null,
-          tokenMeta.price || null,
-          tokenMeta.volume_24h || null,
-          tokenMeta.metadata?.createdOn || null,
-          tokenMeta.freeze_authority || null,
+          tokenMeta.holder || '-',
+          tokenMeta.market_cap || '-',
+          tokenMeta.supply || '-',
+          tokenMeta.price || '-',
+          tokenMeta.volume_24h || '-',
+          tokenMeta.metadata?.createdOn || '-',
+          tokenMeta.freeze_authority || '-',
+          metadataName,
+          metadataSymbol,
+          metadataImage,
           address,
         ],
       };

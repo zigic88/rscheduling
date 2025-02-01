@@ -25,6 +25,7 @@ function App() {
     freeze_authority: '',
     metadata_name: '',
     metadata_symbol: '',
+    metadata_description: '',
     metadata_image: ''
   });
 
@@ -55,7 +56,7 @@ function App() {
     try {
       setLoading(true);
       const response = await axios.post(UPDATE_METADATA_ENDPOINT, { addresses: filteredAddresses });
-      // alert(response.data.message);
+      alert(response.data.message);
       fetchTokens(); // Refresh data after update
     } catch (err) {
       alert("Error updating metadata: " + err.message);
@@ -87,6 +88,7 @@ function App() {
       (token.created_on?.toLowerCase() || '').includes(searchFilters.created_on.toLowerCase()) &&
       (token.metadata_name?.toLowerCase() || '').includes(searchFilters.metadata_name.toLowerCase()) &&
       (token.metadata_symbol?.toLowerCase() || '').includes(searchFilters.metadata_symbol.toLowerCase()) &&
+      (token.metadata_description?.toLowerCase() || '').includes(searchFilters.metadata_description.toLowerCase()) &&
       (token.metadata_image?.toLowerCase() || '').includes(searchFilters.metadata_image.toLowerCase()) &&
       (searchFilters.decimals === '' || token.decimals.toString() === searchFilters.decimals) &&
       (token.freeze_authority?.toLowerCase() || '').includes(searchFilters.freeze_authority.toLowerCase());
@@ -167,9 +169,6 @@ function App() {
     volume_24h: true,
     created_on: true,
     freeze_authority: true,
-    metadata_name: true,
-    metadata_symbol: true,
-    metadata_image: true,
   });
 
   // Define the columns
@@ -186,9 +185,6 @@ function App() {
     { key: "volume_24h", label: "24h Volume" },
     { key: "created_on", label: "Created On" },
     { key: "freeze_authority", label: "Freeze Authority" },
-    { key: "metadata_name", label: "Metadata Name" },
-    { key: "metadata_symbol", label: "Metadata Symbol" },
-    { key: "metadata_image", label: "Metadata Image" },
   ];
 
   // Function to toggle column visibility
@@ -239,6 +235,7 @@ function App() {
                 freeze_authority: '',
                 metadata_name: '',
                 metadata_symbol: '',
+                metadata_description: '',
                 metadata_image: ''
               })
             }
@@ -295,40 +292,165 @@ function App() {
                     </th>
                   </tr>
                   <tr>
-                    {columns.map(col => visibleColumns[col.key] && (
-                      <th key={col.key}>
-                        <input
-                          type="text"
-                          name={col.key}
-                          placeholder={`Filter by ${col.label}`}
-                          value={searchFilters[col.key]}
-                          onChange={(e) => setSearchFilters({ ...searchFilters, [col.key]: e.target.value })}
-                        />
-                        {col.label}
-                      </th>
-                    ))}
+                    <th>
+                      <input
+                        type="text"
+                        name="name"
+                        placeholder="Filter by Name"
+                        value={searchFilters.name}
+                        onChange={handleFilterChange}
+                      />
+                      Name</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="symbol"
+                        placeholder="Filter by Symbol"
+                        value={searchFilters.symbol}
+                        onChange={handleFilterChange}
+                      />
+                      Symbol</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="address"
+                        placeholder="Filter by Address"
+                        value={searchFilters.address}
+                        onChange={handleFilterChange}
+                      />
+                      Address</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="decimals"
+                        placeholder="Filter by Decimals"
+                        value={searchFilters.decimals}
+                        onChange={handleFilterChange}
+                      />
+                      Decimals</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="created_date"
+                        placeholder="Filter by Created Date"
+                        value={searchFilters.created_date}
+                        onChange={handleFilterChange}
+                      />
+                      Created Date</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="holders"
+                        placeholder="Filter by Holders"
+                        value={searchFilters.holders}
+                        onChange={handleFilterChange}
+                      />
+                      Holders</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="marketcap"
+                        placeholder="Filter by Marketcap"
+                        value={searchFilters.marketcap}
+                        onChange={handleFilterChange}
+                      />
+                      Marketcap</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="supply"
+                        placeholder="Filter by Supply"
+                        value={searchFilters.supply}
+                        onChange={handleFilterChange}
+                      />
+                      Supply</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="price"
+                        placeholder="Filter by Price"
+                        value={searchFilters.price}
+                        onChange={handleFilterChange}
+                      />
+                      Price</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="volume_24h"
+                        placeholder="Filter by Volume"
+                        value={searchFilters.volume_24h}
+                        onChange={handleFilterChange}
+                      />
+                      Volume 24H</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="created_on"
+                        placeholder="Filter by Created On"
+                        value={searchFilters.created_on}
+                        onChange={handleFilterChange}
+                      />
+                      Created On</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="freeze_authority"
+                        placeholder="Filter by Freeze Authority"
+                        value={searchFilters.freeze_authority}
+                        onChange={handleFilterChange}
+                      />
+                      Freeze Authority</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="metadata_name"
+                        placeholder="Filter by Metadata Name"
+                        value={searchFilters.metadata_name}
+                        onChange={handleFilterChange}
+                      />
+                      Metadata Name</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="metadata_symbol"
+                        placeholder="Filter by Metadata Symbol"
+                        value={searchFilters.metadata_symbol}
+                        onChange={handleFilterChange}
+                      />
+                      Metadata Symbol</th>
+                    <th>
+                      <input
+                        type="text"
+                        name="metadata_image"
+                        placeholder="Filter by Metadata Image"
+                        value={searchFilters.metadata_image}
+                        onChange={handleFilterChange}
+                      />
+                      Metadata Image</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedTokens.map((token) => (
                     <tr key={token.address}>
-                      {columns.map(col => visibleColumns[col.key] && (
-                        <td key={col.key}>
-                          {col.key === "metadata_image" ? (
-                            token.metadata_image ?
-                            <div>
-                              <img src={token.metadata_image} alt="Metadata" style={{ width: "30px", height: "30px" }} />
-                              {token.metadata_image}</div>
-                              : '-'
-                          ) : col.key === "address" ? (
-                            <a href="#" onClick={() => openInBackground(`https://solscan.io/token/${token.address}`)}>
-                              {token.address}
-                            </a>
-                          ) : (
-                            token[col.key] || '-'
-                          )}
-                        </td>
-                      ))}
+                      <td>{token.name}</td>
+                      <td>{token.symbol}</td>
+                      <td>
+                        <a href="#" onClick={() => openInBackground(`https://solscan.io/token/${token.address}`)}>
+                          {token.address}
+                        </a>
+                      </td>
+                      <td>{token.decimals}</td>
+                      <td>{new Date(token.created_date).toLocaleString()}</td>
+                      <td>{token.holders || '-'}</td>
+                      <td>{token.marketcap || '-'}</td>
+                      <td>{token.supply || '-'}</td>
+                      <td>{token.price || '-'}</td>
+                      <td>{token.volume_24h || '-'}</td>
+                      <td>{token.created_on || '-'}</td>
+                      <td>{token.freeze_authority || '-'}</td>
+                      <td>{token.metadata_name || '-'}</td>
+                      <td>{token.metadata_symbol || '-'}</td>
+                      <td>{token.metadata_image || '-'}</td>
                     </tr>
                   ))}
                 </tbody>

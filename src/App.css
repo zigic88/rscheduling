@@ -73,7 +73,6 @@ th input {
 .token-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 20px 0;
   font-size: 12px;
 }
 
@@ -119,4 +118,43 @@ th input {
 
 .pagination span {
   font-size: 1rem;
+}
+
+/*
+CSS Style for Visible Column
+*/
+.settings-button {
+  position: relative;
+  margin-bottom: 10px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 15px;
+  height: 3px;
+  width: 3px;
+}
+
+.popup-container {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 10px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.popup-container h4 {
+  margin-top: 0;
+}
+
+.popup-container button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.popup-container button:hover {
+  background: #0056b3;
 }
