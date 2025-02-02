@@ -305,6 +305,8 @@ function App() {
                               <a href="#" onClick={() => openInBackground(`https://solscan.io/token/${token.address}`)}>
                                 {token.address}
                               </a>
+                            ) : col.key === "created_date" ? (
+                              <div>{new Date(token.created_date).toLocaleString()}</div>
                             ) : (
                               token[col.key] || '-'
                             )}
