@@ -44,6 +44,7 @@ function App() {
 
       if (filters.name) queryParams.append('name', filters.name);
       if (filters.address) queryParams.append('address', filters.address);
+      if (filters.symbol) queryParams.append('symbol', filters.symbol);
       if (filters.notIncludePump) queryParams.append('excludePump', filters.notIncludePump);
       if (filters.notIncludeMoon) queryParams.append('excludeMoon', filters.notIncludeMoon);
       if (filters.createdOnPump) queryParams.append('createdOn', filters.createdOnPump);
