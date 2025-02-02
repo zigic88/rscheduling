@@ -25,7 +25,6 @@ function App() {
     freeze_authority: '',
     metadata_name: '',
     metadata_symbol: '',
-    metadata_description: '',
     metadata_image: ''
   });
 
@@ -88,7 +87,6 @@ function App() {
       (token.created_on?.toLowerCase() || '').includes(searchFilters.created_on.toLowerCase()) &&
       (token.metadata_name?.toLowerCase() || '').includes(searchFilters.metadata_name.toLowerCase()) &&
       (token.metadata_symbol?.toLowerCase() || '').includes(searchFilters.metadata_symbol.toLowerCase()) &&
-      (token.metadata_description?.toLowerCase() || '').includes(searchFilters.metadata_description.toLowerCase()) &&
       (token.metadata_image?.toLowerCase() || '').includes(searchFilters.metadata_image.toLowerCase()) &&
       (searchFilters.decimals === '' || token.decimals.toString() === searchFilters.decimals) &&
       (token.freeze_authority?.toLowerCase() || '').includes(searchFilters.freeze_authority.toLowerCase());
@@ -235,7 +233,6 @@ function App() {
                 freeze_authority: '',
                 metadata_name: '',
                 metadata_symbol: '',
-                metadata_description: '',
                 metadata_image: ''
               })
             }

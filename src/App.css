@@ -27,6 +27,20 @@ th input {
   cursor: pointer;
 }
 
+.execute-button:hover {
+  background-color: #887405;
+}
+
+.execute-button {
+  margin-left: 30px;
+  padding: 10px 15px;
+  background-color: #cab020;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .refresh-button:hover {
   background-color: #0056b3;
 }

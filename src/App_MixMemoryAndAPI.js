@@ -4,9 +4,9 @@ import './App.css';
 
 function App() {
   const [tokens, setTokens] = useState([]);
+  const [filteredTokens, setFilteredTokens] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
@@ -34,83 +34,100 @@ function App() {
   const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90/api/tokens';
   const UPDATE_METADATA_ENDPOINT = process.env.REACT_APP_UPDATE_METADATA_ENDPOINT || 'https://139.180.184.90/api/update-metadata';
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      let queryParams = new URLSearchParams({
-        page: currentPage,
-        limit: ITEMS_PER_PAGE,
-      });
-
-      if (filters.name) queryParams.append('name', filters.name);
-      if (filters.address) queryParams.append('address', filters.address);
-      if (filters.notIncludePump) queryParams.append('excludePump', filters.notIncludePump);
-      if (filters.notIncludeMoon) queryParams.append('excludeMoon', filters.notIncludeMoon);
-      if (filters.createdOnPump) queryParams.append('createdOn', filters.createdOnPump);
-      if (filters.decimals) queryParams.append('decimals', filters.decimals);
-      if (filters.holders) queryParams.append('holders', filters.holders);
-      if (filters.marketcap) queryParams.append('marketcap', filters.marketcap);
-      if (filters.supply) queryParams.append('supply', filters.supply);
-      if (filters.price) queryParams.append('price', filters.price);
-      if (filters.volume_24h) queryParams.append('volume_24h', filters.volume_24h);
-      if (filters.created_on) queryParams.append('created_on', filters.created_on);
-      if (filters.freeze_authority) queryParams.append('freeze_authority', filters.freeze_authority);
-      if (filters.metadata_name) queryParams.append('metadata_name', filters.metadata_name);
-      if (filters.metadata_symbol) queryParams.append('metadata_symbol', filters.metadata_symbol);
-      if (filters.metadata_image) queryParams.append('metadata_image', filters.metadata_image);
-
-      const response = await axios.get(`${API_ENDPOINT}?${queryParams.toString()}`);
-      console.log("Query Param: ", queryParams.toString());
-      console.log("API Response:", response.data); // Debugging log
-      setTokens(response.data.data && Array.isArray(response.data.data) ? response.data.data : []);
-      setTotalPages(Math.ceil(response.data.total / ITEMS_PER_PAGE) || 1);
-    } catch (err) {
-      setError('Failed to fetch data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    fetchTokens(currentPage, ITEMS_PER_PAGE);
   }, [currentPage]);
 
-  const handleFilterChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
+  useEffect(() => {
+    applyFilters();
+  }, [tokens, filters]);
 
-  const handleRefresh = () => {
-    setFilters({
-      name: '',
-      address: '',
-      notIncludePump: true,
-      notIncludeMoon: true,
-      createdOnPump: false
-    });
-    setCurrentPage(1);
-    fetchData();
+  const fetchTokens = async (page, limit) => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log(`Fetching page ${page}...`);
+      const response = await axios.get(`${API_ENDPOINT}?page=${page}&limit=${limit}`);
+      if (response.data && response.data.data) {
+        console.log("API Response:", response.data);
+        setTokens(response.data.data); // Fix: Reset tokens instead of appending
+        setTotalRecords(parseInt(response.data.total, 10));
+      } else {
+        setTokens([]);
+      }
+    } catch (err) {
+      setError('Failed to fetch data');
+    }
+    setLoading(false);
   };
-
 
   const handleUpdateMetadata = async () => {
-    const filteredAddresses = tokens.map((token) => token.address);
+    const filteredAddresses = filteredTokens.map((token) => token.address);
     console.log('checked ' + filteredAddresses);
 
     try {
       setLoading(true);
       const response = await axios.post(UPDATE_METADATA_ENDPOINT, { addresses: filteredAddresses });
       // alert(response.data.message);
-      fetchData(); // Refresh data after update
+      fetchTokens(); // Refresh data after update
     } catch (err) {
       alert("Error updating metadata: " + err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  const applyFilters = async () => {
+    let filtered = tokens.filter((token) => {
+      // const matchesFilters =
+      //   (token.name?.toLowerCase() || '').includes(filters.name.toLowerCase()) &&
+      //   (token.symbol?.toLowerCase() || '').includes(filters.symbol.toLowerCase()) &&
+      //   (token.address?.toLowerCase() || '').includes(filters.address.toLowerCase()) &&
+      //   (token.created_date?.toLowerCase() || '').includes(filters.created_date.toLowerCase()) &&
+      //   (token.holders?.toString() || '').includes(filters.holders) &&
+      //   (token.marketcap?.toLowerCase() || '').includes(filters.marketcap.toLowerCase()) &&
+      //   (token.supply?.toLowerCase() || '').includes(filters.supply.toLowerCase()) &&
+      //   (token.price?.toLowerCase() || '').includes(filters.price.toLowerCase()) &&
+      //   (token.volume_24h?.toLowerCase() || '').includes(filters.volume_24h.toLowerCase()) &&
+      //   (token.created_on?.toLowerCase() || '').includes(filters.created_on.toLowerCase()) &&
+      //   (token.metadata_name?.toLowerCase() || '').includes(filters.metadata_name.toLowerCase()) &&
+      //   (token.metadata_symbol?.toLowerCase() || '').includes(filters.metadata_symbol.toLowerCase()) &&
+      //   (token.metadata_image?.toLowerCase() || '').includes(filters.metadata_image.toLowerCase()) &&
+      //   (filters.decimals === '' || token.decimals.toString() === filters.decimals) &&
+      //   (token.freeze_authority?.toLowerCase() || '').includes(filters.freeze_authority.toLowerCase());
+
+      const matchesNotIncludePump =
+        filters.notIncludePump ? !(token.address?.toLowerCase() || '').endsWith('pump') : true;
+
+      const matchesNotIncludeMoon =
+        filters.notIncludeMoon ? !(token.address?.toLowerCase() || '').endsWith('moon') : true;
+
+      const matchesCreatedOnPump =
+        filters.createdOnPump ? token.created_on === 'https://pump.fun' : true;
+
+      return matchesNotIncludePump && matchesNotIncludeMoon && matchesCreatedOnPump;
+    });
+
+    console.log('Filter token: ' + filtered.length);
+    if (filtered.length > 0) {
+      setFilteredTokens(filtered);
+    } else {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_ENDPOINT}?name=${filters.name}&symbol=${filters.symbol}&address=${filters.address}`);
+        setFilteredTokens(response.data.data || []);
+      } catch (err) {
+        setError('Failed to fetch filtered data');
+      }
+      setLoading(false);
+    }
+  };
+
+  const handleFilterChange = (field, value) => {
+    setFilters(prevFilters => ({ ...prevFilters, [field]: value }));
+  };
+
+  const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE);
 
   //Open Href link for Address attribute
   const openInBackground = (url) => {
@@ -198,7 +215,7 @@ function App() {
       <h1 style={{ marginTop: '10px', marginBottom: '5px' }}>Token List</h1>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleRefresh} className="refresh-button">Refresh</button>
+          <button onClick={fetchTokens} className="refresh-button">Refresh</button>
           <button className="clear-filter-button"
             onClick={() =>
               setFilters({
@@ -254,7 +271,7 @@ function App() {
           </div>
         </div>
         <div style={{ fontSize: '14px' }}>
-          <span>Total Records: {tokens.length}</span> | <span>Page {currentPage} of {totalPages}</span>
+          <span>Total Records: {filteredTokens.length}</span> | <span>Page {currentPage} of {totalPages}</span>
         </div>
       </div>
       {loading && <p>Loading...</p>}
@@ -270,7 +287,6 @@ function App() {
                     <th colSpan={columns.length} style={{ textAlign: "left", position: "relative" }}>
                       {/* Settings Button (Top-Left Inside Table) */}
                       <button ref={buttonRef} className="settings-button" onClick={togglePopup}>⚙️</button>
-                      <button onClick={fetchData} className="execute-button">Apply Filter</button>
                     </th>
                   </tr>
                   <tr>
@@ -289,8 +305,8 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tokens.length > 0 ? (
-                    tokens.map(token => (
+                  {filteredTokens.length > 0 ? (
+                    filteredTokens.map(token => (
                       <tr key={token.address}>
                         {columns.map(col => visibleColumns[col.key] && (
                           <td key={col.key}>
@@ -319,10 +335,11 @@ function App() {
             </div>
           </div>
           <div className="pagination" style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
-            <button onClick={() => setCurrentPage(1)}>First Page</button>
-            <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>Previous</button>
-            <button onClick={() => setCurrentPage((prev) => prev + 1)}>Next</button>
-            <button onClick={() => setCurrentPage(totalPages)}>Last Page</button>
+            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>First</button>
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Previous</button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage >= totalPages}>Next</button>
+            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage >= totalPages}>Last</button>
           </div>
 
           {/* Popup for Column Selection */}
@@ -340,7 +357,7 @@ function App() {
           )}
         </>
       )}
-      {!loading && !error && tokens.length === 0 && <p>No tokens found.</p>}
+      {!loading && !error && filteredTokens.length === 0 && <p>No tokens found.</p>}
     </div>
   );
 }

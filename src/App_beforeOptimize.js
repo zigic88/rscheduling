@@ -4,12 +4,10 @@ import './App.css';
 
 function App() {
   const [tokens, setTokens] = useState([]);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchFilters, setSearchFilters] = useState({
     name: '',
     symbol: '',
     address: '',
@@ -34,77 +32,31 @@ function App() {
   const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90/api/tokens';
   const UPDATE_METADATA_ENDPOINT = process.env.REACT_APP_UPDATE_METADATA_ENDPOINT || 'https://139.180.184.90/api/update-metadata';
 
-  const fetchData = async () => {
+  useEffect(() => {
+    fetchTokens();
+  }, []);
+
+  const fetchTokens = async () => {
     setLoading(true);
     try {
-      let queryParams = new URLSearchParams({
-        page: currentPage,
-        limit: ITEMS_PER_PAGE,
-      });
-
-      if (filters.name) queryParams.append('name', filters.name);
-      if (filters.address) queryParams.append('address', filters.address);
-      if (filters.notIncludePump) queryParams.append('excludePump', filters.notIncludePump);
-      if (filters.notIncludeMoon) queryParams.append('excludeMoon', filters.notIncludeMoon);
-      if (filters.createdOnPump) queryParams.append('createdOn', filters.createdOnPump);
-      if (filters.decimals) queryParams.append('decimals', filters.decimals);
-      if (filters.holders) queryParams.append('holders', filters.holders);
-      if (filters.marketcap) queryParams.append('marketcap', filters.marketcap);
-      if (filters.supply) queryParams.append('supply', filters.supply);
-      if (filters.price) queryParams.append('price', filters.price);
-      if (filters.volume_24h) queryParams.append('volume_24h', filters.volume_24h);
-      if (filters.created_on) queryParams.append('created_on', filters.created_on);
-      if (filters.freeze_authority) queryParams.append('freeze_authority', filters.freeze_authority);
-      if (filters.metadata_name) queryParams.append('metadata_name', filters.metadata_name);
-      if (filters.metadata_symbol) queryParams.append('metadata_symbol', filters.metadata_symbol);
-      if (filters.metadata_image) queryParams.append('metadata_image', filters.metadata_image);
-
-      const response = await axios.get(`${API_ENDPOINT}?${queryParams.toString()}`);
-      console.log("Query Param: ", queryParams.toString());
-      console.log("API Response:", response.data); // Debugging log
-      setTokens(response.data.data && Array.isArray(response.data.data) ? response.data.data : []);
-      setTotalPages(Math.ceil(response.data.total / ITEMS_PER_PAGE) || 1);
+      const response = await axios.get(API_ENDPOINT);
+      setTokens(response.data);
     } catch (err) {
-      setError('Failed to fetch data');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [currentPage]);
-
-  const handleFilterChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handleRefresh = () => {
-    setFilters({
-      name: '',
-      address: '',
-      notIncludePump: true,
-      notIncludeMoon: true,
-      createdOnPump: false
-    });
-    setCurrentPage(1);
-    fetchData();
-  };
-
-
   const handleUpdateMetadata = async () => {
-    const filteredAddresses = tokens.map((token) => token.address);
+    const filteredAddresses = filteredTokens.map((token) => token.address);
     console.log('checked ' + filteredAddresses);
 
     try {
       setLoading(true);
       const response = await axios.post(UPDATE_METADATA_ENDPOINT, { addresses: filteredAddresses });
       // alert(response.data.message);
-      fetchData(); // Refresh data after update
+      fetchTokens(); // Refresh data after update
     } catch (err) {
       alert("Error updating metadata: " + err.message);
     } finally {
@@ -112,7 +64,71 @@ function App() {
     }
   };
 
-  //Open Href link for Address attribute
+  const handleFilterChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setSearchFilters((prevFilters) => ({
+      ...prevFilters,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    setCurrentPage(1); // Reset to the first page when filters change
+  };
+
+  const filteredTokens = tokens.filter((token) => {
+    const matchesFilters =
+      (token.name?.toLowerCase() || '').includes(searchFilters.name.toLowerCase()) &&
+      (token.symbol?.toLowerCase() || '').includes(searchFilters.symbol.toLowerCase()) &&
+      (token.address?.toLowerCase() || '').includes(searchFilters.address.toLowerCase()) &&
+      (token.created_date?.toLowerCase() || '').includes(searchFilters.created_date.toLowerCase()) &&
+      (token.holders?.toString() || '').includes(searchFilters.holders) &&
+      (token.marketcap?.toLowerCase() || '').includes(searchFilters.marketcap.toLowerCase()) &&
+      (token.supply?.toLowerCase() || '').includes(searchFilters.supply.toLowerCase()) &&
+      (token.price?.toLowerCase() || '').includes(searchFilters.price.toLowerCase()) &&
+      (token.volume_24h?.toLowerCase() || '').includes(searchFilters.volume_24h.toLowerCase()) &&
+      (token.created_on?.toLowerCase() || '').includes(searchFilters.created_on.toLowerCase()) &&
+      (token.metadata_name?.toLowerCase() || '').includes(searchFilters.metadata_name.toLowerCase()) &&
+      (token.metadata_symbol?.toLowerCase() || '').includes(searchFilters.metadata_symbol.toLowerCase()) &&
+      (token.metadata_image?.toLowerCase() || '').includes(searchFilters.metadata_image.toLowerCase()) &&
+      (searchFilters.decimals === '' || token.decimals.toString() === searchFilters.decimals) &&
+      (token.freeze_authority?.toLowerCase() || '').includes(searchFilters.freeze_authority.toLowerCase());
+
+    const matchesNotIncludePump =
+      searchFilters.notIncludePump ? !(token.address?.toLowerCase() || '').endsWith('pump') : true;
+
+    const matchesNotIncludeMoon =
+      searchFilters.notIncludeMoon ? !(token.address?.toLowerCase() || '').endsWith('moon') : true;
+
+    const matchesCreatedOnPump =
+      searchFilters.createdOnPump ? token.created_on === 'https://pump.fun' : true;
+
+    return matchesFilters && matchesNotIncludePump && matchesNotIncludeMoon && matchesCreatedOnPump;
+  });
+
+  const paginatedTokens = filteredTokens.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const totalPages = Math.ceil(filteredTokens.length / ITEMS_PER_PAGE);
+
+  const handlePageChange = (direction) => {
+    setCurrentPage((prevPage) => {
+      if (direction === 'next' && prevPage < totalPages) {
+        return prevPage + 1;
+      } else if (direction === 'prev' && prevPage > 1) {
+        return prevPage - 1;
+      }
+      return prevPage;
+    });
+  };
+
+  const handleGoToFirstPage = () => {
+    setCurrentPage(1);
+  };
+
+  const handleGoToLastPage = () => {
+    setCurrentPage(totalPages);
+  };
+
   const openInBackground = (url) => {
     try {
       var a = document.createElement("a");
@@ -127,6 +143,10 @@ function App() {
     }
   };
 
+  function open_in_bg(c_url, n_url) {
+    window.open("http://localhost:3000", "mywindow");
+    window.open("https://www.google.com" + "#maintain_focus", "_self");
+  }
 
   //For Visible Column Configuration
   const [showPopup, setShowPopup] = useState(false);
@@ -198,10 +218,10 @@ function App() {
       <h1 style={{ marginTop: '10px', marginBottom: '5px' }}>Token List</h1>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleRefresh} className="refresh-button">Refresh</button>
+          <button onClick={fetchTokens} className="refresh-button">Refresh</button>
           <button className="clear-filter-button"
             onClick={() =>
-              setFilters({
+              setSearchFilters({
                 name: '',
                 symbol: '',
                 address: '',
@@ -230,47 +250,48 @@ function App() {
             <label>
               <input
                 type="checkbox"
-                checked={filters.notIncludePump}
-                onChange={(e) => setFilters({ ...setFilters, notIncludePump: e.target.checked })}
+                checked={searchFilters.notIncludePump}
+                onChange={(e) => setSearchFilters({ ...searchFilters, notIncludePump: e.target.checked })}
               />
               Not Include Pump
             </label>
             <label>
               <input
                 type="checkbox"
-                checked={setFilters.notIncludeMoon}
-                onChange={(e) => setFilters({ ...setFilters, notIncludeMoon: e.target.checked })}
+                checked={searchFilters.notIncludeMoon}
+                onChange={(e) => setSearchFilters({ ...searchFilters, notIncludeMoon: e.target.checked })}
               />
               Not Include Moon
             </label>
             <label>
               <input
                 type="checkbox"
-                checked={setFilters.createdOnPump}
-                onChange={(e) => setFilters({ ...setFilters, createdOnPump: e.target.checked })}
+                checked={searchFilters.createdOnPump}
+                onChange={(e) => setSearchFilters({ ...searchFilters, createdOnPump: e.target.checked })}
               />
               Created On Pump
             </label>
           </div>
         </div>
         <div style={{ fontSize: '14px' }}>
-          <span>Total Records: {tokens.length}</span> | <span>Page {currentPage} of {totalPages}</span>
+          <span>Total Records: {filteredTokens.length}</span> | <span>Page {currentPage} of {totalPages}</span>
         </div>
       </div>
       {loading && <p>Loading...</p>}
-      {error && <p className="error">{error}</p>}
+      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
       {!loading && !error && (
         <>
           <div style={{ position: "relative" }}>
+            {/* Table Wrapper */}
             <div className="table-container">
+              {/* Button inside table header */}
               <table className="token-table" style={{ width: '100%', position: "relative" }}>
                 <thead>
                   <tr>
                     <th colSpan={columns.length} style={{ textAlign: "left", position: "relative" }}>
                       {/* Settings Button (Top-Left Inside Table) */}
                       <button ref={buttonRef} className="settings-button" onClick={togglePopup}>⚙️</button>
-                      <button onClick={fetchData} className="execute-button">Apply Filter</button>
                     </th>
                   </tr>
                   <tr>
@@ -280,8 +301,8 @@ function App() {
                           type="text"
                           name={col.key}
                           placeholder={`Filter by ${col.label}`}
-                          value={filters[col.key]}
-                          onChange={(e) => setFilters({ ...filters, [col.key]: e.target.value })}
+                          value={searchFilters[col.key]}
+                          onChange={(e) => setSearchFilters({ ...searchFilters, [col.key]: e.target.value })}
                         />
                         {col.label}
                       </th>
@@ -289,40 +310,44 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tokens.length > 0 ? (
-                    tokens.map(token => (
-                      <tr key={token.address}>
-                        {columns.map(col => visibleColumns[col.key] && (
-                          <td key={col.key}>
-                            {col.key === "metadata_image" ? (
-                              token.metadata_image ?
-                                <div>
-                                  <img src={token.metadata_image} alt="Metadata" style={{ width: "30px", height: "30px" }} />
-                                  {token.metadata_image}</div>
-                                : '-'
-                            ) : col.key === "address" ? (
-                              <a href="#" onClick={() => openInBackground(`https://solscan.io/token/${token.address}`)}>
-                                {token.address}
-                              </a>
-                            ) : (
-                              token[col.key] || '-'
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="6">No records found</td></tr>
-                  )}
+                  {paginatedTokens.map((token) => (
+                    <tr key={token.address}>
+                      {columns.map(col => visibleColumns[col.key] && (
+                        <td key={col.key}>
+                          {col.key === "metadata_image" ? (
+                            token.metadata_image ?
+                              <div>
+                                <img src={token.metadata_image} alt="Metadata" style={{ width: "30px", height: "30px" }} />
+                                {token.metadata_image}</div>
+                              : '-'
+                          ) : col.key === "address" ? (
+                            <a href="#" onClick={() => openInBackground(`https://solscan.io/token/${token.address}`)}>
+                              {token.address}
+                            </a>
+                          ) : (
+                            token[col.key] || '-'
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
           <div className="pagination" style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
-            <button onClick={() => setCurrentPage(1)}>First Page</button>
-            <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>Previous</button>
-            <button onClick={() => setCurrentPage((prev) => prev + 1)}>Next</button>
-            <button onClick={() => setCurrentPage(totalPages)}>Last Page</button>
+            <button onClick={handleGoToFirstPage} disabled={currentPage === 1}>
+              First Page
+            </button>
+            <button onClick={() => handlePageChange('prev')} disabled={currentPage === 1}>
+              Previous
+            </button>
+            <button onClick={() => handlePageChange('next')} disabled={currentPage === totalPages}>
+              Next
+            </button>
+            <button onClick={handleGoToLastPage} disabled={currentPage === totalPages}>
+              Last Page
+            </button>
           </div>
 
           {/* Popup for Column Selection */}
@@ -340,7 +365,7 @@ function App() {
           )}
         </>
       )}
-      {!loading && !error && tokens.length === 0 && <p>No tokens found.</p>}
+      {!loading && !error && filteredTokens.length === 0 && <p>No tokens found.</p>}
     </div>
   );
 }
