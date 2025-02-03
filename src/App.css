@@ -172,3 +172,7 @@ CSS Style for Visible Column
 .popup-container button:hover {
   background: #0056b3;
 }
+
+.checkbox-filter label {
+  font-size: 13px;
+}

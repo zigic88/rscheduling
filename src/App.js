@@ -232,7 +232,7 @@ function App() {
           >
             Clear Filters
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="checkbox-filter" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button onClick={handleUpdateMetadata} className="update-metadata-button">Update Metadata</button>
             <label>
               <input
