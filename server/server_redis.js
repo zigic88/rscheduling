@@ -255,7 +255,7 @@ app.get('/api/tokens', async (req, res) => {
     let { page, limit, name, symbol, address, decimals, created_date,
       holders, market_cap, supply, price, volume_24h,
       created_on, freeze_authority, metadata_name, metadata_symbol, metadata_image,
-      excludePump, excludeMoon, createdOn } = req.query;
+      excludePump, excludeMoon, createdOn, difMetadataName, difMetadataSymbol } = req.query;
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 20;
     const offset = (page - 1) * limit;
@@ -375,6 +375,18 @@ app.get('/api/tokens', async (req, res) => {
       query += ` AND LOWER(created_on) = LOWER($${queryParams.length + 1})`;
       countQuery += ` AND LOWER(created_on) = LOWER($${queryParams.length + 1})`;
       queryParams.push(`https://pump.fun`);
+    }
+
+    if (difMetadataName === 'true') {
+      console.log('difMetadataName is true');
+      query += ` AND LOWER(name) <> LOWER(metadata_name)`;
+      countQuery += ` AND LOWER(name) = LOWER(metadata_name)`;
+    }
+
+    if (difMetadataSymbol === 'true') {
+      console.log('difMetadataSymbol is true');
+      query += ` AND LOWER(symbol) <> LOWER(metadata_symbol)`;
+      countQuery += ` AND LOWER(symbol) = LOWER(metadata_symbol)`;
     }
 
     query += ` ORDER BY created_date DESC LIMIT ${limit} OFFSET ${offset}`;

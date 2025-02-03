@@ -17,6 +17,8 @@ function App() {
     notIncludePump: true,
     notIncludeMoon: true,
     createdOnPump: false,
+    difMetadataName: false,
+    difMetadataSymbol: false,
     created_date: '',
     holders: '',
     marketcap: '',
@@ -48,6 +50,8 @@ function App() {
       if (filters.notIncludePump) queryParams.append('excludePump', filters.notIncludePump);
       if (filters.notIncludeMoon) queryParams.append('excludeMoon', filters.notIncludeMoon);
       if (filters.createdOnPump) queryParams.append('createdOn', filters.createdOnPump);
+      if (filters.difMetadataName) queryParams.append('difMetadataName', filters.difMetadataName);
+      if (filters.difMetadataSymbol) queryParams.append('difMetadataSymbol', filters.difMetadataSymbol);
       if (filters.decimals) queryParams.append('decimals', filters.decimals);
       if (filters.holders) queryParams.append('holders', filters.holders);
       if (filters.marketcap) queryParams.append('marketcap', filters.marketcap);
@@ -210,6 +214,8 @@ function App() {
                 notIncludePump: true,
                 notIncludeMoon: true,
                 createdOnPump: false,
+                difMetadataName: false,
+                difMetadataSymbol: false,
                 created_date: '',
                 holders: '',
                 marketcap: '',
@@ -251,6 +257,22 @@ function App() {
                 onChange={(e) => setFilters({ ...setFilters, createdOnPump: e.target.checked })}
               />
               Created On Pump
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={setFilters.difMetadataName}
+                onChange={(e) => setFilters({ ...setFilters, difMetadataName: e.target.checked })}
+              />
+              Diff Name - Metadata Name
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={setFilters.difMetadataSymbol}
+                onChange={(e) => setFilters({ ...setFilters, difMetadataSymbol: e.target.checked })}
+              />
+              Diff Symbol - Metadata Symbol
             </label>
           </div>
         </div>
