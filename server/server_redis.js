@@ -467,6 +467,13 @@ app.get('/api/tokens', async (req, res) => {
       queryParams.push(`https://pump.fun`);
     }
 
+    if (createdOn === 'false') {
+      console.log('createdOn is true');
+      query += ` AND LOWER(created_on) NOT ILIKE LOWER($${queryParams.length + 1})`;
+      countQuery += ` AND LOWER(created_on) NOT ILIKE LOWER($${queryParams.length + 1})`;
+      queryParams.push(`https://pump.fun`);
+    }
+
     if (difMetadataName === 'true') {
       console.log('difMetadataName is true');
       query += ` AND LOWER(name) <> LOWER(metadata_name)`;
