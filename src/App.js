@@ -9,6 +9,7 @@ function App() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [filterType, setFilterType] = useState('contains');
   const [filters, setFilters] = useState({
     name: '',
     symbol: '',
@@ -36,14 +37,20 @@ function App() {
   const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90/api/tokens';
   const UPDATE_METADATA_ENDPOINT = process.env.REACT_APP_UPDATE_METADATA_ENDPOINT || 'https://139.180.184.90/api/update-metadata';
 
+  const handleFilterTypeChange = (event) => {
+    setFilterType(event.target.value);
+  };
+
   const fetchData = async () => {
+    console.log('Selected Filter Type:', filterType);
     setLoading(true);
     try {
       let queryParams = new URLSearchParams({
         page: currentPage,
         limit: ITEMS_PER_PAGE,
       });
-
+      queryParams.append('filter_type', filterType);
+      
       if (filters.name) queryParams.append('name', filters.name);
       if (filters.address) queryParams.append('address', filters.address);
       if (filters.symbol) queryParams.append('symbol', filters.symbol);
@@ -292,8 +299,17 @@ function App() {
                   <tr>
                     <th colSpan={columns.length} style={{ textAlign: "left", position: "relative" }}>
                       {/* Settings Button (Top-Left Inside Table) */}
-                      <button ref={buttonRef} className="settings-button" onClick={togglePopup}>⚙️</button>
-                      <button onClick={fetchData} className="execute-button">Apply Filter</button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <button ref={buttonRef} className="settings-button" onClick={togglePopup}>⚙️</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <label>Filter Type:</label>
+                          <input type="radio" id="contains" name="filterType" value="contains" checked={filterType === 'contains'} onChange={handleFilterTypeChange} />
+                          <label htmlFor="contains">Contains</label>
+                          <input type="radio" id="equals" name="filterType" value="equals" checked={filterType === 'equals'} onChange={handleFilterTypeChange} />
+                          <label htmlFor="equals">Equals</label>
+                        </div>
+                        <button onClick={fetchData} className="execute-button">Apply Filter</button>
+                      </div>
                     </th>
                   </tr>
                   <tr>

@@ -252,7 +252,7 @@ app.post('/api/update-metadata', async (req, res) => {
 // API endpoint to retrieve token list from PostgreSQL database
 app.get('/api/tokens', async (req, res) => {
   try {
-    let { page, limit, name, symbol, address, decimals, created_date,
+    let { page, limit, filter_type, name, symbol, address, decimals, created_date,
       holders, market_cap, supply, price, volume_24h,
       created_on, freeze_authority, metadata_name, metadata_symbol, metadata_image,
       excludePump, excludeMoon, createdOn, difMetadataName, difMetadataSymbol } = req.query;
@@ -264,98 +264,188 @@ app.get('/api/tokens', async (req, res) => {
     let queryParams = [];
     let countQuery = `SELECT COUNT(*) FROM tokenres.tbtoken WHERE 1=1`;
 
-    if (name) {
-      query += ` AND LOWER(name) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(name) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${name}%`);
+    if (filter_type === 'equals') {
+      if (name) {
+        query += ` AND LOWER(name) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(name) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${name}`);
+      }
+
+      if (symbol) {
+        query += ` AND LOWER(symbol) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(symbol) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${symbol}`);
+      }
+
+      if (address) {
+        query += ` AND address = $${queryParams.length + 1}`;
+        countQuery += ` AND address = $${queryParams.length + 1}`;
+        queryParams.push(`${address}`);
+      }
+
+      if (decimals) {
+        query += ` AND decimals = $${queryParams.length + 1}`;
+        countQuery += ` AND decimals = $${queryParams.length + 1}`;
+        queryParams.push(`${decimals}`);
+      }
+
+      if (created_date) {
+        query += ` AND DATE(created_date) = $${queryParams.length + 1}`;
+        countQuery += ` AND DATE(created_date) = $${queryParams.length + 1}`;
+        queryParams.push(created_date);
+      }
+
+      if (holders) {
+        query += ` AND LOWER(holders) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(holders) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${holders}`);
+      }
+
+      if (market_cap) {
+        query += ` AND LOWER(market_cap) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(market_cap) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${market_cap}`);
+      }
+
+      if (supply) {
+        query += ` AND LOWER(supply) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(supply) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${supply}`);
+      }
+
+      if (price) {
+        query += ` AND LOWER(price) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(price) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${price}`);
+      }
+
+      if (volume_24h) {
+        query += ` AND LOWER(volume_24h) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(volume_24h) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${volume_24h}`);
+      }
+
+      if (created_on) {
+        query += ` AND LOWER(created_on) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(created_on) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${created_on}`);
+      }
+
+      if (freeze_authority) {
+        query += ` AND LOWER(freeze_authority) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(freeze_authority) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${freeze_authority}`);
+      }
+
+      if (metadata_name) {
+        query += ` AND LOWER(metadata_name) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(metadata_name) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${metadata_name}`);
+      }
+
+      if (metadata_symbol) {
+        query += ` AND LOWER(metadata_symbol) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(metadata_symbol) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${metadata_symbol}`);
+      }
+
+      if (metadata_image) {
+        query += ` AND LOWER(metadata_image) = LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(metadata_image) = LOWER($${queryParams.length + 1})`;
+        queryParams.push(`${metadata_image}`);
+      }
+    } else {
+      if (name) {
+        query += ` AND LOWER(name) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(name) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${name}%`);
+      }
+
+      if (symbol) {
+        query += ` AND LOWER(symbol) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(symbol) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${symbol}%`);
+      }
+
+      if (address) {
+        query += ` AND address LIKE $${queryParams.length + 1}`;
+        countQuery += ` AND address LIKE $${queryParams.length + 1}`;
+        queryParams.push(`%${address}%`);
+      }
+
+      if (decimals) {
+        query += ` AND decimals = $${queryParams.length + 1}`;
+        countQuery += ` AND decimals = $${queryParams.length + 1}`;
+        queryParams.push(`${decimals}`);
+      }
+
+      if (created_date) {
+        query += ` AND DATE(created_date) = $${queryParams.length + 1}`;
+        countQuery += ` AND DATE(created_date) = $${queryParams.length + 1}`;
+        queryParams.push(created_date);
+      }
+
+      if (holders) {
+        query += ` AND LOWER(holders) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(holders) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${holders}%`);
+      }
+
+      if (market_cap) {
+        query += ` AND LOWER(market_cap) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(market_cap) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${market_cap}%`);
+      }
+
+      if (supply) {
+        query += ` AND LOWER(supply) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(supply) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${supply}%`);
+      }
+
+      if (price) {
+        query += ` AND LOWER(price) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(price) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${price}%`);
+      }
+
+      if (volume_24h) {
+        query += ` AND LOWER(volume_24h) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(volume_24h) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${volume_24h}%`);
+      }
+
+      if (created_on) {
+        query += ` AND LOWER(created_on) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(created_on) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${created_on}%`);
+      }
+
+      if (freeze_authority) {
+        query += ` AND LOWER(freeze_authority) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(freeze_authority) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${freeze_authority}%`);
+      }
+
+      if (metadata_name) {
+        query += ` AND LOWER(metadata_name) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(metadata_name) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${metadata_name}%`);
+      }
+
+      if (metadata_symbol) {
+        query += ` AND LOWER(metadata_symbol) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(metadata_symbol) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${metadata_symbol}%`);
+      }
+
+      if (metadata_image) {
+        query += ` AND LOWER(metadata_image) LIKE LOWER($${queryParams.length + 1})`;
+        countQuery += ` AND LOWER(metadata_image) LIKE LOWER($${queryParams.length + 1})`;
+        queryParams.push(`%${metadata_image}%`);
+      }
     }
 
-    if (symbol) {
-      query += ` AND LOWER(symbol) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(symbol) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${symbol}%`);
-    }
-
-    if (address) {
-      query += ` AND address LIKE $${queryParams.length + 1}`;
-      countQuery += ` AND address LIKE $${queryParams.length + 1}`;
-      queryParams.push(`%${address}%`);
-    }
-
-    if (decimals) {
-      query += ` AND decimals = $${queryParams.length + 1}`;
-      countQuery += ` AND decimals = $${queryParams.length + 1}`;
-      queryParams.push(`${decimals}`);
-    }
-
-    if (created_date) {
-      query += ` AND DATE(created_date) = $${queryParams.length + 1}`;
-      countQuery += ` AND DATE(created_date) = $${queryParams.length + 1}`;
-      queryParams.push(created_date);
-    }
-
-    if (holders) {
-      query += ` AND LOWER(holders) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(holders) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${holders}%`);
-    }
-
-    if (market_cap) {
-      query += ` AND LOWER(market_cap) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(market_cap) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${market_cap}%`);
-    }
-
-    if (supply) {
-      query += ` AND LOWER(supply) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(supply) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${supply}%`);
-    }
-
-    if (price) {
-      query += ` AND LOWER(price) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(price) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${price}%`);
-    }
-
-    if (volume_24h) {
-      query += ` AND LOWER(volume_24h) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(volume_24h) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${volume_24h}%`);
-    }
-
-    if (created_on) {
-      query += ` AND LOWER(created_on) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(created_on) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${created_on}%`);
-    }
-
-    if (freeze_authority) {
-      query += ` AND LOWER(freeze_authority) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(freeze_authority) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${freeze_authority}%`);
-    }
-
-    if (metadata_name) {
-      query += ` AND LOWER(metadata_name) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(metadata_name) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${metadata_name}%`);
-    }
-
-    if (metadata_symbol) {
-      query += ` AND LOWER(metadata_symbol) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(metadata_symbol) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${metadata_symbol}%`);
-    }
-
-    if (metadata_image) {
-      query += ` AND LOWER(metadata_image) LIKE LOWER($${queryParams.length + 1})`;
-      countQuery += ` AND LOWER(metadata_image) LIKE LOWER($${queryParams.length + 1})`;
-      queryParams.push(`%${metadata_image}%`);
-    }
-
-    console.log('excludePump: ', excludePump);
-    console.log('excludeMoon: ', excludeMoon);
     if (excludePump === 'true') {
       console.log('excludePump is true');
       query += ` AND LOWER(address) NOT ILIKE LOWER($${queryParams.length + 1})`;
@@ -380,14 +470,15 @@ app.get('/api/tokens', async (req, res) => {
     if (difMetadataName === 'true') {
       console.log('difMetadataName is true');
       query += ` AND LOWER(name) <> LOWER(metadata_name)`;
-      countQuery += ` AND LOWER(name) = LOWER(metadata_name)`;
+      countQuery += ` AND LOWER(name) <> LOWER(metadata_name)`;
     }
 
     if (difMetadataSymbol === 'true') {
       console.log('difMetadataSymbol is true');
       query += ` AND LOWER(symbol) <> LOWER(metadata_symbol)`;
-      countQuery += ` AND LOWER(symbol) = LOWER(metadata_symbol)`;
+      countQuery += ` AND LOWER(symbol) <> LOWER(metadata_symbol)`;
     }
+
 
     query += ` ORDER BY created_date DESC LIMIT ${limit} OFFSET ${offset}`;
 
