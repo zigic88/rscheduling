@@ -257,8 +257,7 @@ function App() {
             Clear Filters
           </button>
           <div className="checkbox-filter" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button onClick={handleUpdateMetadata} className="update-metadata-button">Update Metadata</button>
-            <button onClick={handleBotMessage} className="update-metadata-button">Bot Message</button>
+            <button onClick={handleUpdateMetadata} className="update-metadata-button">Update Metadata</button>            
             <label>
               <input
                 type="checkbox"
