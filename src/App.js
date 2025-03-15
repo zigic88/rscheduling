@@ -30,12 +30,14 @@ function App() {
     freeze_authority: '',
     metadata_name: '',
     metadata_symbol: '',
-    metadata_image: ''
+    metadata_image: '',
+    metadata_description: '',
   });
 
   const ITEMS_PER_PAGE = 20;
   const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://139.180.184.90/api/tokens';
   const UPDATE_METADATA_ENDPOINT = process.env.REACT_APP_UPDATE_METADATA_ENDPOINT || 'https://139.180.184.90/api/update-metadata';
+  const API_TELEGRAM_BOT_ENDPOINT = process.env.REACT_APP_API_TELEGRAM_BOT_ENDPOINT || 'https://139.180.184.90/api/bot/sendMessage';
 
   const handleFilterTypeChange = (event) => {
     setFilterType(event.target.value);
@@ -50,7 +52,7 @@ function App() {
         limit: ITEMS_PER_PAGE,
       });
       queryParams.append('filter_type', filterType);
-      
+
       if (filters.name) queryParams.append('name', filters.name);
       if (filters.address) queryParams.append('address', filters.address);
       if (filters.symbol) queryParams.append('symbol', filters.symbol);
@@ -70,6 +72,7 @@ function App() {
       if (filters.metadata_name) queryParams.append('metadata_name', filters.metadata_name);
       if (filters.metadata_symbol) queryParams.append('metadata_symbol', filters.metadata_symbol);
       if (filters.metadata_image) queryParams.append('metadata_image', filters.metadata_image);
+      if (filters.metadata_description) queryParams.append('metadata_description', filters.metadata_description);
 
       const response = await axios.get(`${API_ENDPOINT}?${queryParams.toString()}`);
       console.log("Query Param: ", queryParams.toString());
@@ -124,6 +127,18 @@ function App() {
     }
   };
 
+  const handleBotMessage = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(API_TELEGRAM_BOT_ENDPOINT, { chat_id: '-4623457838', text: 'Lola bocillll' });
+      // alert(response.data.message);      
+    } catch (err) {
+      alert("Error updating metadata: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   //Open Href link for Address attribute
   const openInBackground = (url) => {
     try {
@@ -138,7 +153,6 @@ function App() {
       console.error('Error opening new tab:', error);
     }
   };
-
 
   //For Visible Column Configuration
   const [showPopup, setShowPopup] = useState(false);
@@ -162,6 +176,7 @@ function App() {
     metadata_name: true,
     metadata_symbol: true,
     metadata_image: true,
+    metadata_description: true
   });
 
   // Define the columns
@@ -181,6 +196,7 @@ function App() {
     { key: "metadata_name", label: "Metadata Name" },
     { key: "metadata_symbol", label: "Metadata Symbol" },
     { key: "metadata_image", label: "Metadata Image" },
+    { key: "metadata_description", label: "Metadata Description" },
   ];
 
   // Function to toggle column visibility
@@ -233,7 +249,8 @@ function App() {
                 freeze_authority: '',
                 metadata_name: '',
                 metadata_symbol: '',
-                metadata_image: ''
+                metadata_image: '',
+                metadata_description: ''
               })
             }
           >
@@ -241,6 +258,7 @@ function App() {
           </button>
           <div className="checkbox-filter" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button onClick={handleUpdateMetadata} className="update-metadata-button">Update Metadata</button>
+            <button onClick={handleBotMessage} className="update-metadata-button">Bot Message</button>
             <label>
               <input
                 type="checkbox"

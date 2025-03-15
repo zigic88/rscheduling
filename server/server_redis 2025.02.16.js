@@ -8,13 +8,10 @@ const app = express();
 const cron = require('node-cron');
 const axios = require('axios');
 const bodyParser = require('body-parser');
-// const { Pool } = require('pg');
+const { Pool } = require('pg');
 
 const TELEGRAM_TOKEN = '8075488644:AAGJPrLXNcVN7qtq-VPbQ_efjjM8m5-ZfH8';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
-
-const pool = require('./database/pool');
-const { createOrAlterTable } = require('./create_alter_table');
 
 // SSL options
 // const sslOptions = {
@@ -48,7 +45,7 @@ app.get('/getGroupChatId', async (req, res) => {
 });
 
 // Route to send message to Telegram chat with text and chat_id parameters
-app.post('/api/sendMessage', async (req, res) => {
+app.post('/sendMessage', async (req, res) => {
   const { chat_id, text } = req.body;
   if (!chat_id || !text) {
     return res.status(400).json({ success: false, error: 'Both chat_id and text parameters are required' });
@@ -69,117 +66,107 @@ app.post('/api/sendMessage', async (req, res) => {
 });
 
 // Webhook to listen for Telegram bot commands
-// app.post('/webhook', async (req, res) => {
-//   const { message } = req.body;
-//   if (!message || !message.text) {
-//     return res.sendStatus(400);
-//   }
+app.post('/webhook', async (req, res) => {
+  const { message } = req.body;
+  if (!message || !message.text) {
+    return res.sendStatus(400);
+  }
 
-//   const chatId = message.chat.id;
-//   const text = message.text.trim();
-//   let reply = '';
+  const chatId = message.chat.id;
+  const text = message.text.trim();
+  let reply = '';
 
-//   // Handle different bot commands
-//   switch (text) {
-//     case '/start':
-//       reply = 'Welcome to the bot! Use /help to see available commands.';
-//       break;
-//     case '/help':
-//       reply = 'Available commands:\n/start - Start the bot\n/help - Show commands';
-//       break;
-//     default:
-//       reply = `Unknown command: ${text}`;
-//       break;
-//   }
+  // Handle different bot commands
+  switch (text) {
+    case '/start':
+      reply = 'Welcome to the bot! Use /help to see available commands.';
+      break;
+    case '/help':
+      reply = 'Available commands:\n/start - Start the bot\n/help - Show commands';
+      break;
+    default:
+      reply = `Unknown command: ${text}`;
+      break;
+  }
 
-//   // Send response back to the user
-//   try {
-//     await axios.post(`${TELEGRAM_API}/sendMessage`, {
-//       chat_id: chatId,
-//       text: reply,
-//     });
-//   } catch (error) {
-//     console.error('Error sending message:', error.message);
-//   }
+  // Send response back to the user
+  try {
+    await axios.post(`${TELEGRAM_API}/sendMessage`, {
+      chat_id: chatId,
+      text: reply,
+    });
+  } catch (error) {
+    console.error('Error sending message:', error.message);
+  }
 
-//   res.sendStatus(200);
-// });
+  res.sendStatus(200);
+});
 
-// // PostgreSQL connection settings
-// const pool = new Pool({
-//   user: 'postgres',
-//   host: 'localhost',
-//   database: 'postgres',
-//   password: 'postgres',
-//   port: 5432,
-//   schema: 'tokenres'
-// });
+// PostgreSQL connection settings
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'postgres',
+  password: 'postgres',
+  port: 5432,
+  schema: 'tokenres'
+});
 
 // Middleware to parse JSON
 app.use(express.json());
 
-// // Create or alter tbtoken table
-// async function createOrAlterTable() {
-//   try {
-//     await pool.query(`
-//       CREATE TABLE IF NOT EXISTS tokenres.tbtoken (
-//         address VARCHAR(255) PRIMARY KEY,
-//         created_date TIMESTAMP WITH TIME ZONE, 
-//         created_time DECIMAL(10, 2),
-//         decimals INTEGER,
-//         name VARCHAR(255),
-//         status VARCHAR(255),
-//         symbol VARCHAR(255)
-//       );
-//     `);
-
-//     await pool.query(`
-//       ALTER TABLE tokenres.tbtoken
-//       ADD COLUMN IF NOT EXISTS holders VARCHAR,
-//       ADD COLUMN IF NOT EXISTS marketcap VARCHAR,
-//       ADD COLUMN IF NOT EXISTS supply VARCHAR,
-//       ADD COLUMN IF NOT EXISTS price VARCHAR,
-//       ADD COLUMN IF NOT EXISTS volume_24h VARCHAR,
-//       ADD COLUMN IF NOT EXISTS created_on VARCHAR,
-//       ADD COLUMN IF NOT EXISTS freeze_authority VARCHAR;
-//     `);
-
-//     await pool.query(`
-//       ALTER TABLE tokenres.tbtoken
-//       ALTER COLUMN holders TYPE VARCHAR,
-//       ALTER COLUMN marketcap TYPE VARCHAR,
-//       ALTER COLUMN supply TYPE VARCHAR,
-//       ALTER COLUMN price TYPE VARCHAR,
-//       ALTER COLUMN volume_24h TYPE VARCHAR,
-//       ALTER COLUMN created_on TYPE VARCHAR,
-//       ALTER COLUMN freeze_authority TYPE VARCHAR;
-//     `);
-
-//     await pool.query(`
-//       ALTER TABLE tokenres.tbtoken
-//       ADD COLUMN IF NOT EXISTS metadata_name VARCHAR,
-//       ADD COLUMN IF NOT EXISTS metadata_symbol VARCHAR,
-//       ADD COLUMN IF NOT EXISTS metadata_image VARCHAR;
-//     `);
-
-//     console.log('tbtoken table created or altered successfully');
-//   } catch (error) {
-//     console.error('Error creating or altering tbtoken table:', error);
-//   }
-// }
-// createOrAlterTable
-
-// Initialize table creation or alteration
-async function setupDatabase() {
+// Create or alter tbtoken table
+async function createOrAlterTable() {
   try {
-    await createOrAlterTable();
-    console.log('Database setup complete');
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tokenres.tbtoken (
+        address VARCHAR(255) PRIMARY KEY,
+        created_date TIMESTAMP WITH TIME ZONE, 
+        created_time DECIMAL(10, 2),
+        decimals INTEGER,
+        name VARCHAR(255),
+        status VARCHAR(255),
+        symbol VARCHAR(255)
+      );
+    `);
+
+    await pool.query(`
+      ALTER TABLE tokenres.tbtoken
+      ADD COLUMN IF NOT EXISTS holders VARCHAR,
+      ADD COLUMN IF NOT EXISTS marketcap VARCHAR,
+      ADD COLUMN IF NOT EXISTS supply VARCHAR,
+      ADD COLUMN IF NOT EXISTS price VARCHAR,
+      ADD COLUMN IF NOT EXISTS volume_24h VARCHAR,
+      ADD COLUMN IF NOT EXISTS created_on VARCHAR,
+      ADD COLUMN IF NOT EXISTS freeze_authority VARCHAR;
+    `);
+
+    await pool.query(`
+      ALTER TABLE tokenres.tbtoken
+      ALTER COLUMN holders TYPE VARCHAR,
+      ALTER COLUMN marketcap TYPE VARCHAR,
+      ALTER COLUMN supply TYPE VARCHAR,
+      ALTER COLUMN price TYPE VARCHAR,
+      ALTER COLUMN volume_24h TYPE VARCHAR,
+      ALTER COLUMN created_on TYPE VARCHAR,
+      ALTER COLUMN freeze_authority TYPE VARCHAR;
+    `);
+
+    await pool.query(`
+      ALTER TABLE tokenres.tbtoken
+      ADD COLUMN IF NOT EXISTS metadata_name VARCHAR,
+      ADD COLUMN IF NOT EXISTS metadata_symbol VARCHAR,
+      ADD COLUMN IF NOT EXISTS metadata_image VARCHAR;
+    `);
+
+    console.log('tbtoken table created or altered successfully');
   } catch (error) {
-    console.error('Database setup failed:', error);
+    console.error('Error creating or altering tbtoken table:', error);
   }
 }
 
-setupDatabase();
+// Initialize table creation or alteration
+createOrAlterTable();
 
 // Function to fetch and save data from the API
 async function fetchAndSaveData(page) {
@@ -198,8 +185,6 @@ async function fetchAndSaveData(page) {
       return false; // No data returned
     }
 
-    let tokenListNew = []; // Empty list to store filtered tokens
-
     for (const token of tokenList) {
       // Check if the address already exists in the database
       const checkQuery = {
@@ -214,76 +199,44 @@ async function fetchAndSaveData(page) {
         continue;
       }
 
-      //IF Token not End with pump and moon
-      //then collect from API Metadata
-      //check in notification settings
-      if (!token.address.endsWith("pump") && !token.address.endsWith("moon")) {
-        // Fetch additional details for the token from the secondary API
-        const tokenMetaResponse = await axios.get(`https://pro-api.solscan.io/v2.0/token/meta?address=${token.address}`, {
-          headers: {
-            'token': API_TOKEN,
-          },
-        });
+      // Fetch additional details for the token from the secondary API
+      const tokenMetaResponse = await axios.get(`https://pro-api.solscan.io/v2.0/token/meta?address=${token.address}`, {
+        headers: {
+          'token': API_TOKEN,
+        },
+      });
 
-        const tokenMeta = tokenMetaResponse.data.data || {};
+      const tokenMeta = tokenMetaResponse.data.data || {};
 
-        // Extract metadata attributes safely
-        const metadataImage = tokenMeta.metadata?.image || null;
-        const metadataName = tokenMeta.metadata?.name || null;
-        const metadataSymbol = tokenMeta.metadata?.symbol || null;
-        const metadataDescription = tokenMeta.metadata?.description || null;
+      // Extract metadata attributes safely
+      const metadataImage = tokenMeta.metadata?.image || null;
+      const metadataName = tokenMeta.metadata?.name || null;
+      const metadataSymbol = tokenMeta.metadata?.symbol || null;
 
-        // Insert new record, including only fields that are available
-        const insertQuery = {
-          text: `INSERT INTO tokenres.tbtoken (address, decimals, name, symbol, created_time, created_date, holders, marketcap, supply, price, volume_24h, created_on, freeze_authority, metadata_name, metadata_symbol, metadata_image, metadata_description) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
-          values: [
-            token.address,
-            token.decimals,
-            token.name,
-            token.symbol,
-            token.created_time,
-            new Date(token.created_time * 1000).toISOString(),
-            tokenMeta.holder || '-',
-            tokenMeta.market_cap || '-',
-            tokenMeta.supply || '-',
-            tokenMeta.price || '-',
-            tokenMeta.volume_24h || '-',
-            tokenMeta.metadata?.createdOn || '-',
-            tokenMeta.freeze_authority || '-',
-            metadataName, metadataSymbol, metadataImage, metadataDescription
-          ].map(value => (value !== undefined ? value : null)),
-        };
+      // Insert new record, including only fields that are available
+      const insertQuery = {
+        text: `INSERT INTO tokenres.tbtoken (address, decimals, name, symbol, created_time, created_date, holders, marketcap, supply, price, volume_24h, created_on, freeze_authority, metadata_name, metadata_symbol, metadata_image) 
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+        values: [
+          token.address,
+          token.decimals,
+          token.name,
+          token.symbol,
+          token.created_time,
+          new Date(token.created_time * 1000).toISOString(),
+          tokenMeta.holder || '-',
+          tokenMeta.market_cap || '-',
+          tokenMeta.supply || '-',
+          tokenMeta.price || '-',
+          tokenMeta.volume_24h || '-',
+          tokenMeta.metadata?.createdOn || '-',
+          tokenMeta.freeze_authority || '-',
+          metadataName, metadataSymbol, metadataImage
+        ].map(value => (value !== undefined ? value : null)),
+      };
 
-        await pool.query(insertQuery);
-
-        tokenListNew.push(token);
-      }
+      await pool.query(insertQuery);
       console.log(`Address ${token.address} inserted successfully.`);
-    }
-
-    if (Array.isArray(tokenListNew) && tokenListNew.length > 0) {
-      const query = `SELECT * FROM tokenres.tbnotification WHERE 1=1`;
-      const queryParams = [];
-      const queryResult = await pool.query(query, queryParams);
-      const dynamicQueryParam = queryResult.rows[0].query_text;
-      const dynamicQueryType = queryResult.rows[0].query_type;
-      console.log("Dynamic Query Param:", dynamicQueryParam);
-      console.log("Dynamic Query Type:", dynamicQueryType);
-
-      let filteredTokens;
-      if (dynamicQueryType === 'equals') {
-        filteredTokens = filterTokensThatEquals(tokenListNew, dynamicQueryParam);
-      } else {
-        filteredTokens = filterTokensThatContains(tokenListNew, dynamicQueryParam);
-      }
-
-      // Filter tokens based on the dynamic parameter
-      //const filteredTokens = filterTokens(tokenList, dynamicQueryParam);
-      console.log("Filtered tokens:", filteredTokens);
-      //Send Notification if meet requirements
-      // Pass the filtered tokens to the sendMessageNotification method
-      sendMessageNotification(filteredTokens);
     }
 
     return true; // Data fetched and processed successfully
@@ -293,120 +246,8 @@ async function fetchAndSaveData(page) {
   }
 }
 
-//OLD ONE
-function filterTokens(tokens, paramString) {
-  // Parse the parameter string into an object of key-value pairs.
-  const parameters = paramString.split("##").reduce((acc, pair) => {
-    const [key, value] = pair.split("=");
-    if (key && value !== undefined) {
-      acc[key] = value;
-    }
-    return acc;
-  }, {});
-
-  // Filter tokens: each token must match all provided parameter key-value pairs.
-  return tokens.filter(token =>
-    Object.keys(parameters).every(key => token[key] === parameters[key])
-  );
-}
-
-//EQUALS
-function filterTokensThatEquals(tokens, filterString) {
-  if (!filterString) return tokens;
-
-  // Normalize the filter string and split into conditions
-  let conditions = filterString.toLowerCase().split(/\s+(and|or)\s+/);
-  let logicalOperators = [];
-
-  // Extract logical operators separately
-  let filters = conditions.filter((condition, index) => {
-    if (condition === 'and' || condition === 'or') {
-      logicalOperators.push(condition);
-      return false;
-    }
-    return true;
-  });
-
-  return tokens.filter(token => {
-    let results = filters.map(condition => {
-      let [key, value] = condition.split('=').map(s => s.trim().replace(/['"]/g, ''));
-      return token[key] && token[key].toLowerCase() === value.toLowerCase();
-    });
-
-    // Evaluate conditions with logical operators
-    return results.reduce((acc, curr, index) => {
-      if (logicalOperators[index - 1] === 'or') return acc || curr;
-      if (logicalOperators[index - 1] === 'and') return acc && curr;
-      return curr;
-    }, results[0]);
-  });
-}
-
-//CONTAINS
-function filterTokensThatContains(tokens, filterString) {
-  if (!filterString) return tokens;
-
-  // Normalize the filter string and split into conditions
-  let conditions = filterString.toLowerCase().split(/\s+(and|or)\s+/);
-  let logicalOperators = [];
-
-  // Extract logical operators separately
-  let filters = conditions.filter((condition, index) => {
-    if (condition === 'and' || condition === 'or') {
-      logicalOperators.push(condition);
-      return false;
-    }
-    return true;
-  });
-
-  return tokens.filter(token => {
-    let results = filters.map(condition => {
-      let [key, value] = condition.split('=').map(s => s.trim().replace(/['"]/g, ''));
-
-      // Check if the token's field contains the value (case insensitive)
-      return token[key] && token[key].toLowerCase().includes(value.toLowerCase());
-    });
-
-    // Evaluate conditions with logical operators
-    return results.reduce((acc, curr, index) => {
-      if (logicalOperators[index - 1] === 'or') return acc || curr;
-      if (logicalOperators[index - 1] === 'and') return acc && curr;
-      return curr;
-    }, results[0]);
-  });
-}
-
-/**
- * Function to send a notification for tokens that meet certain criteria.
- * @param {Array} tokens - Array of token objects that meet the dynamic parameters.
- */
-async function sendMessageNotification(tokens) {
-  for (const token of tokens) { // Use for..of for proper async handling
-    // Construct the message with all tokens, each on a new line
-    const textMessage = tokens.map(token =>
-      `Token: ${token.name}\nAddress: ${token.address}\nSymbol: ${token.symbol}`
-    ).join("\n\n"); // Separate each token with two new lines for readability
-    console.log(textMessage);
-
-    try {
-      const response = await axios.post(
-        'https://api.telegram.org/bot8075488644:AAGJPrLXNcVN7qtq-VPbQ_efjjM8m5-ZfH8/sendMessage',
-        {
-          chat_id: '-4623457838',
-          text: textMessage
-        }
-      );
-      console.log("Message sent successfully:", response.data);
-    } catch (error) {
-      console.error("Error sending message:", error.message);
-    }
-  }
-}
-
-// Cron job to fetch token data from Solscan API every 10 seconds
-// PROD change cron to 10
-// PROD change page to 15
-cron.schedule('*/30 * * * * *', async () => { // Runs every 10 seconds
+// Cron job to fetch token data from Solscan API every 30 seconds
+cron.schedule('*/3000 * * * * *', async () => { // Runs every 30 seconds
   console.log('Starting to fetch data from Solscan API...');
 
   for (let page = 1; page <= 2; page++) {
@@ -417,6 +258,7 @@ cron.schedule('*/30 * * * * *', async () => { // Runs every 10 seconds
 
   console.log('Data fetching completed.');
 });
+
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -445,7 +287,6 @@ app.post('/api/update-metadata', async (req, res) => {
       const metadataImage = tokenMeta.metadata?.image || null;
       const metadataName = tokenMeta.metadata?.name || null;
       const metadataSymbol = tokenMeta.metadata?.symbol || null;
-      const metadataDescription = tokenMeta.metadata?.description || null;
 
       // Update the metadata fields for the token
       const updateQuery = {
@@ -461,9 +302,8 @@ app.post('/api/update-metadata', async (req, res) => {
             freeze_authority = $7,
             metadata_name = $8, 
             metadata_symbol = $9, 
-            metadata_image = $10,
-            metadata_description = $11
-          WHERE address = $12
+            metadata_image = $10
+          WHERE address = $11
         `,
         values: [
           tokenMeta.holder || '-',
@@ -476,7 +316,6 @@ app.post('/api/update-metadata', async (req, res) => {
           metadataName,
           metadataSymbol,
           metadataImage,
-          metadataDescription,
           address,
         ],
       };
@@ -497,7 +336,7 @@ app.get('/api/tokens', async (req, res) => {
   try {
     let { page, limit, filter_type, name, symbol, address, decimals, created_date,
       holders, market_cap, supply, price, volume_24h,
-      created_on, freeze_authority, metadata_name, metadata_symbol, metadata_image, metadata_description,
+      created_on, freeze_authority, metadata_name, metadata_symbol, metadata_image,
       excludePump, excludeMoon, createdOn, difMetadataName, difMetadataSymbol } = req.query;
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 20;
@@ -597,13 +436,6 @@ app.get('/api/tokens', async (req, res) => {
         countQuery += ` AND LOWER(metadata_image) = LOWER($${queryParams.length + 1})`;
         queryParams.push(`${metadata_image}`);
       }
-
-      if (metadata_description) {
-        query += ` AND LOWER(metadata_description) = LOWER($${queryParams.length + 1})`;
-        countQuery += ` AND LOWER(metadata_description) = LOWER($${queryParams.length + 1})`;
-        queryParams.push(`${metadata_description}`);
-      }
-
     } else {
       if (name) {
         query += ` AND LOWER(name) LIKE LOWER($${queryParams.length + 1})`;
@@ -694,12 +526,6 @@ app.get('/api/tokens', async (req, res) => {
         countQuery += ` AND LOWER(metadata_image) LIKE LOWER($${queryParams.length + 1})`;
         queryParams.push(`%${metadata_image}%`);
       }
-
-      if (metadata_description) {
-        query += ` AND LOWER(metadata_description) LIKE LOWER($${queryParams.length + 1})`;
-        countQuery += ` AND LOWER(metadata_description) LIKE LOWER($${queryParams.length + 1})`;
-        queryParams.push(`%${metadata_description}%`);
-      }
     }
 
     if (excludePump === 'true') {
@@ -755,99 +581,6 @@ app.get('/api/tokens', async (req, res) => {
   } catch (error) {
     console.error("Error fetching tokens:", error);
     res.status(500).json({ error: "Server error" });
-  }
-});
-
-// app.get('/api/bot/notifications', async (req, res) => {
-//   try {
-//     let query = `SELECT * FROM tokenres.tbnotification WHERE 1=1`;
-//     let queryParams = [];
-//     const result = await pool.query(query, queryParams);
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Error retrieving notifications list' });
-//   }
-// });
-
-//Get List Of Notifications
-app.get('/api/bot/notifications', async (req, res) => {
-  try {
-    let query = `SELECT * FROM tokenres.tbnotification WHERE 1=1`;
-    let queryParams = [];
-    const result = await pool.query(query, queryParams);
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error retrieving notifications list' });
-  }
-});
-
-//Init Notififications
-app.post('/api/bot/init-notification', async (req, res) => {
-  try {
-    const query = {
-      text: `INSERT INTO tokenres.tbnotification (notif_name, description, group_id, query_text, created_date) VALUES 
-      ($1, $2, $3, $4, $5)`,
-      values: [
-        'TOKEN_SNAP', 'TOKEN SNAP NOTIFICATIONS', '-4623457838', 'address=1231212', new Date().toISOString()
-      ],
-    }
-
-    await pool.query(query);
-    res.json({ message: 'Init data completed successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error retrieving notifications list' });
-  }
-});
-
-//Update Notififications
-app.post('/api/bot/update-notification', async (req, res) => {
-  try {
-    const { notif_name, description, group_id, query_text, query_type } = req.body;
-    // Validate required field
-    if (!notif_name) {
-      return res.status(400).json({ message: 'notif_name is required' });
-    }
-
-    // Create an object of fields and remove empty values
-    const fields = {
-      description,
-      group_id,
-      query_text,
-      query_type,
-      update_date: new Date().toISOString(),
-    };
-
-    // Filter out empty values
-    const filteredFields = Object.fromEntries(
-      Object.entries(fields).filter(([_, value]) => value !== undefined && value !== null && value !== '')
-    );
-
-    // Build SET clause dynamically
-    const setClauses = Object.keys(filteredFields).map(
-      (key, index) => `${key}=$${index + 2}`
-    ).join(', ');
-
-
-    // Construct query
-    const query = {
-      text: `UPDATE tokenres.tbnotification SET ${setClauses} WHERE notif_name=$1`,
-      values: [notif_name, ...Object.values(filteredFields)],
-    };
-
-    // Execute query
-    const result = await pool.query(query);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'No record found with the provided notif_name' });
-    }
-
-    res.json({ message: 'Notification updated successfully' });
-  } catch (error) {
-    console.error('Error updating notification:', error);
-    res.status(500).json({ message: 'Error updating notification' });
   }
 });
 

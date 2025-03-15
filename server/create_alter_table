@@ -1,0 +1,72 @@
+const pool = require('./database/pool');
+
+// Create or alter tbtoken table
+async function createOrAlterTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tokenres.tbtoken (
+        address VARCHAR(255) PRIMARY KEY,
+        created_date TIMESTAMP WITH TIME ZONE, 
+        created_time DECIMAL(10, 2),
+        decimals INTEGER,
+        name VARCHAR(255),
+        status VARCHAR(255),
+        symbol VARCHAR(255)
+      );
+    `);
+
+    await pool.query(`
+      ALTER TABLE tokenres.tbtoken
+      ADD COLUMN IF NOT EXISTS holders VARCHAR,
+      ADD COLUMN IF NOT EXISTS marketcap VARCHAR,
+      ADD COLUMN IF NOT EXISTS supply VARCHAR,
+      ADD COLUMN IF NOT EXISTS price VARCHAR,
+      ADD COLUMN IF NOT EXISTS volume_24h VARCHAR,
+      ADD COLUMN IF NOT EXISTS created_on VARCHAR,
+      ADD COLUMN IF NOT EXISTS freeze_authority VARCHAR;
+    `);
+
+    await pool.query(`
+      ALTER TABLE tokenres.tbtoken
+      ALTER COLUMN holders TYPE VARCHAR,
+      ALTER COLUMN marketcap TYPE VARCHAR,
+      ALTER COLUMN supply TYPE VARCHAR,
+      ALTER COLUMN price TYPE VARCHAR,
+      ALTER COLUMN volume_24h TYPE VARCHAR,
+      ALTER COLUMN created_on TYPE VARCHAR,
+      ALTER COLUMN freeze_authority TYPE VARCHAR;
+    `);
+
+    await pool.query(`
+      ALTER TABLE tokenres.tbtoken
+      ADD COLUMN IF NOT EXISTS metadata_name VARCHAR,
+      ADD COLUMN IF NOT EXISTS metadata_symbol VARCHAR,
+      ADD COLUMN IF NOT EXISTS metadata_image VARCHAR,
+      ADD COLUMN IF NOT EXISTS metadata_description VARCHAR;
+    `);
+
+    console.log('tbtoken table created or altered successfully');
+
+    //Notification Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tokenres.tbnotification (
+        id SERIAL PRIMARY KEY,
+        notif_name VARCHAR(255),
+        description VARCHAR(255),
+        group_id VARCHAR(100),
+        query_text TEXT,
+        query_type VARCHAR(100),
+        created_date TIMESTAMP WITH TIME ZONE, 
+        created_time DECIMAL(10, 2),
+        update_date TIMESTAMP WITH TIME ZONE, 
+        update_time DECIMAL(10, 2)
+      );
+    `);
+    console.log('tbnotification table created or altered successfully');
+
+  } catch (error) {
+    console.error('Error creating or altering tbtoken table:', error);
+  }
+}
+
+module.exports = { createOrAlterTable };
