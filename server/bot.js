@@ -1,8 +1,16 @@
 require('dotenv').config(); // Load .env at the top
+const https = require('https');
+// const fs = require('fs');
+// const PORT = 443;
+
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 const app = express();
 const axios = require('axios');
+
+// const cert = fs.readFileSync('/opt/apps/ssl/server.cert'); // Load the self-signed certificate
+// const agent = new https.Agent({ ca: cert });
+const agent = new https.Agent({ rejectUnauthorized: false });
 
 // const TELEGRAM_BOT_TOKEN = '8075488644:AAGJPrLXNcVN7qtq-VPbQ_efjjM8m5-ZfH8'; // Replace with your own bot token
 // const GROUP_CHAT_ID = '-4623457838';
@@ -11,9 +19,22 @@ const API_TELEGRAM_BOT_QUERY_ENDPOINT = process.env.REACT_APP_API_TELEGRAM_BOT_Q
 const API_TELEGRAM_BOT_UPDATE_NOTIFICATION_ENDPOINT = process.env.REACT_APP_API_TELEGRAM_BOT_UPDATE_NOTIFICATION_ENDPOINT || 'https://139.180.184.90/api/bot/update-notifications';
 
 const TELEGRAM_BOT_TOKEN = process.env.REACT_APP_TELEGRAM_BOT_TOKEN || '8075488644:AAGJPrLXNcVN7qtq-VPbQ_efjjM8m5-ZfH8';
-const GROUP_CHAT_ID = process.env.REACT_APP_TELEGRAM_GROUP_CHAT_ID || '-4623457838';
+const GROUP_CHAT_ID = process.env.REACT_APP_TELEGRAM_GROUP_CHAT_ID || '-4796647550';
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+
+// const sslOptions = require('./sslConfig');
+
+// SSL options
+// const sslOptions = {
+//   key: fs.readFileSync('/opt/apps/ssl/server.key'),
+//   cert: fs.readFileSync('/opt/apps/ssl/server.cert'),
+// };
+
+//Start HTTPS server
+// https.createServer(sslOptions, app).listen(PORT, () => {
+//   console.log(`Server running on https://your-server-ip:${PORT}`);
+// });
 
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
@@ -91,7 +112,7 @@ async function retrieveQueryParam() {
     try {
         const urls = `${API_TELEGRAM_BOT_QUERY_ENDPOINT}`;
         console.log(urls);
-        const response = await axios.get(urls);
+        const response = await axios.get(urls, { httpsAgent: agent });
         const data = response.data;
         console.log("Query Param:", response.data);
 
@@ -131,7 +152,8 @@ async function changeQueryParam(queryText, queryType) {
         const response = await axios.post(urls, requestData, {
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },            
+            httpsAgent: agent 
         });
         const data = response.data;
         console.log("Query Param:", data);

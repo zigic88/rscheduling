@@ -1,5 +1,5 @@
 const https = require('https');
-const fs = require('fs');
+// const fs = require('fs');
 const PORT = 443;
 const API_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3MzMwNjc2NzAyNTMsImVtYWlsIjoib2hkYW1uaXRzdG9ueUBvdXRsb29rLmNvbSIsImFjdGlvbiI6InRva2VuLWFwaSIsImFwaVZlcnNpb24iOiJ2MiIsImlhdCI6MTczMzA2NzY3MH0.teF5vKuH870DbErbrWWN6AMoeWgimukmV1ies3dm7p8';
 
@@ -16,16 +16,18 @@ const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 const pool = require('./database/pool');
 const { createOrAlterTable } = require('./create_alter_table');
 
+const sslOptions = require('./sslConfig');
+
 // SSL options
 // const sslOptions = {
 //   key: fs.readFileSync('/opt/apps/ssl/server.key'),
 //   cert: fs.readFileSync('/opt/apps/ssl/server.cert'),
 // };
 
-// Start HTTPS server
-// https.createServer(sslOptions, app).listen(PORT, () => {
-//   console.log(`Server running on https://your-server-ip:${PORT}`);
-// });
+//Start HTTPS server
+https.createServer(sslOptions, app).listen(PORT, () => {
+  console.log(`Server running on https://your-server-ip:${PORT}`);
+});
 
 //for Telegram
 app.use(bodyParser.json());
