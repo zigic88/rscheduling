@@ -194,9 +194,9 @@ function App() {
     { key: "created_on", label: "Created On" },
     { key: "freeze_authority", label: "Freeze Authority" },
     { key: "metadata_name", label: "Metadata Name" },
-    { key: "metadata_symbol", label: "Metadata Symbol" },
-    { key: "metadata_image", label: "Metadata Image" },
     { key: "metadata_description", label: "Metadata Description" },
+    { key: "metadata_symbol", label: "Metadata Symbol" },
+    { key: "metadata_image", label: "Metadata Image" },    
   ];
 
   // Function to toggle column visibility
@@ -356,6 +356,10 @@ function App() {
                                   <img src={token.metadata_image} alt="Metadata" style={{ width: "30px", height: "30px" }} />
                                   {token.metadata_image}</div>
                                 : '-'
+                            ) : col.key === "metadata_description" ? (
+                              <div style={{ width: "30px", height: "30px" }}>
+                                {token.metadata_description}
+                              </div>
                             ) : col.key === "address" ? (
                               <a href="#" onClick={() => openInBackground(`https://solscan.io/token/${token.address}`)}>
                                 {token.address}

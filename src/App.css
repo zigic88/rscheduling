@@ -109,6 +109,10 @@ th input {
   background-color: #f1f1f1;
 }
 
+.token-table td:nth-child(1), th:nth-child(1) {
+  width: 100px;
+}
+
 .pagination {
   display: flex;
   justify-content: space-between;
