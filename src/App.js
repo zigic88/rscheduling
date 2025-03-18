@@ -356,10 +356,6 @@ function App() {
                                   <img src={token.metadata_image} alt="Metadata" style={{ width: "30px", height: "30px" }} />
                                   {token.metadata_image}</div>
                                 : '-'
-                            ) : col.key === "metadata_description" ? (
-                              <div style={{ width: "30px", height: "30px" }}>
-                                {token.metadata_description}
-                              </div>
                             ) : col.key === "address" ? (
                               <a href="#" onClick={() => openInBackground(`https://solscan.io/token/${token.address}`)}>
                                 {token.address}
