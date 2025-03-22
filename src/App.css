@@ -85,9 +85,10 @@ th input {
 }
 
 .token-table {
-  width: 100%;
+  width: 200%;
   border-collapse: collapse;
   font-size: 12px;
+  /* table-layout: fixed; */
 }
 
 .token-table th, .token-table td {
@@ -112,6 +113,14 @@ th input {
 .token-table td:nth-child(1), th:nth-child(1) {
   width: 100px;
 }
+
+/* .wide-description {
+  width: 600px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  color: green
+} */
 
 .pagination {
   display: flex;

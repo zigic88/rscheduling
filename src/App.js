@@ -311,7 +311,7 @@ function App() {
         <>
           <div style={{ position: "relative" }}>
             <div className="table-container">
-              <table className="token-table" style={{ width: '100%', position: "relative" }}>
+              <table className="token-table">
                 <thead>
                   <tr>
                     <th colSpan={columns.length} style={{ textAlign: "left", position: "relative" }}>

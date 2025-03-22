@@ -16,7 +16,8 @@ const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 const pool = require('./database/pool');
 const { createOrAlterTable } = require('./create_alter_table');
 
-const sslOptions = require('./sslConfig');
+//FOR PRODUCTION ***
+// const sslOptions = require('./sslConfig');
 
 // SSL options
 // const sslOptions = {
@@ -25,9 +26,10 @@ const sslOptions = require('./sslConfig');
 // };
 
 //Start HTTPS server
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`Server running on https://your-server-ip:${PORT}`);
-});
+//FOR PRODUCTION ****
+// https.createServer(sslOptions, app).listen(PORT, () => {
+//   console.log(`Server running on https://your-server-ip:${PORT}`);
+// });
 
 //for Telegram
 app.use(bodyParser.json());
